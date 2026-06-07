@@ -1,0 +1,42 @@
+models:
+  whisper:
+    name: large-v3          # tiny | base | small | medium | large-v3
+    device: cuda            # cpu | cuda
+    compute_type: float16   # int8 (CPU) | float16 (GPU)
+    batch_size: 16
+    vad_filter: true
+
+  clap:
+    name: laion/larger_clap_general
+    enable_fusion: false
+    audio_model: HTSAT-base
+    batch_size: 32
+
+  clip:
+    name: ViT-L-14
+    pretrained: openai
+    batch_size: 64
+
+  text_encoder:
+    name: sentence-transformers/all-mpnet-base-v2
+    batch_size: 128
+    normalize: true
+
+  reranker:
+    name: cross-encoder/ms-marco-MiniLM-L-6-v2
+    max_length: 512
+
+ingestion:
+  vad_aggressiveness: 2         # 0–3
+  min_segment_sec: 1.0
+  max_segment_sec: 30.0
+  keyframe_interval_sec: 5.0
+  transcript_max_words_per_chunk: 80
+
+retrieval:
+  rrf_k: 60
+  fusion_weights:
+    audio: 0.4
+    visual: 0.3
+    text: 0.3
+  memory_context_window: 2      # hops in temporal graph

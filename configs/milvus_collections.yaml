@@ -1,0 +1,77 @@
+# Milvus collection schemas and index configuration
+# These values mirror storage/milvus/schemas.py but are kept here
+# for documentation and for CLI tooling (build_index.py).
+
+collections:
+  audio_segments:
+    primary_field: segment_id
+    vector_field: audio_vector
+    vector_dim: 512
+    scalar_fields:
+      - name: media_id
+        type: VARCHAR
+        max_length: 64
+      - name: start_sec
+        type: FLOAT
+      - name: end_sec
+        type: FLOAT
+      - name: summary
+        type: VARCHAR
+        max_length: 512
+      - name: object_key
+        type: VARCHAR
+        max_length: 512
+    index:
+      type: HNSW
+      metric: COSINE
+      params:
+        M: 16
+        efConstruction: 200
+
+  visual_keyframes:
+    primary_field: frame_id
+    vector_field: visual_vector
+    vector_dim: 768
+    scalar_fields:
+      - name: media_id
+        type: VARCHAR
+        max_length: 64
+      - name: timestamp_sec
+        type: FLOAT
+    index:
+      type: HNSW
+      metric: COSINE
+      params:
+        M: 16
+        efConstruction: 200
+
+  text_transcripts:
+    primary_field: chunk_id
+    vector_field: text_vector
+    vector_dim: 768
+    scalar_fields:
+      - name: segment_id
+        type: VARCHAR
+        max_length: 64
+      - name: media_id
+        type: VARCHAR
+        max_length: 64
+      - name: start_sec
+        type: FLOAT
+      - name: end_sec
+        type: FLOAT
+      - name: text
+        type: VARCHAR
+        max_length: 2048
+      - name: language
+        type: VARCHAR
+        max_length: 8
+      - name: object_key
+        type: VARCHAR
+        max_length: 512
+    index:
+      type: HNSW
+      metric: COSINE
+      params:
+        M: 16
+        efConstruction: 200
