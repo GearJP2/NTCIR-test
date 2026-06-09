@@ -28,7 +28,10 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Add temporal metrics: tIoU, Recall@K, mAP@K for one-query-one-ground-truth evaluation.
 - [x] Add fixed-window generation for media duration.
 - [x] Add per-modality result normalization into `VideoMoment`.
-- [ ] Add late-fusion ranking over Video Moments using Evaluation Profiles.
+- [x] Add visual-only weighted Video Moment ranking using Evaluation Profiles.
+- [x] Add late-fusion ranking across visual and ASR evidence using Evaluation Profiles.
+- [x] Add audio evidence to late-fusion ranking.
+- [ ] Add summary evidence to late-fusion ranking if generated summaries are indexed separately.
 - [x] Add `activitynet_visual_heavy` and `castle_lifelog_balanced` Evaluation Profiles.
 - [x] Update Search Interface to require selected video before search.
 - [x] Render result timestamps and seek the video player to `start_sec` when clicked.
@@ -54,11 +57,13 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Manifest-driven evaluator runner in `evaluation/moment_evaluator.py`.
 - [x] Search Interface calls `/api/search/moments` with selected `media_id`, profile, query, and Top-K.
 - [x] Moment Search request accepts optional `duration_sec`; UI and evaluator pass it when available.
+- [x] Visual-only `MomentSearchService` uses CLIP text query embedding, searches `visual_keyframes`, and normalizes frame hits into fixed-window `VideoMoment` results.
+- [x] ASR/text evidence search uses `TextEncoder`, searches `text_transcripts`, and merges transcript interval hits with visual frame hits.
+- [x] Audio evidence search uses CLAP text query embedding, searches `audio_segments`, and merges audio interval hits with visual/ASR hits.
 
 ## Current Next Slice
 
-- [ ] Wire `MomentSearchService` to actual visual/audio/ASR retrieval hits.
-- [ ] Replace empty-baseline moment search with retrieval-backed results.
+- [ ] Add summary evidence search if/when generated summaries have their own indexed field.
 - [ ] Add CASTLE Curated Query Set for manual inspection.
 
 ## Domain Docs
