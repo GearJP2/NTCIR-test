@@ -1,0 +1,10 @@
+{"query_id":"castle_smoke:001","query":"person eating a meal","tags":["food","daily_activity"],"notes":"Basic lifelog food scene."}
+{"query_id":"castle_smoke:002","query":"person drinking from a cup","tags":["food","object_interaction"],"notes":"Short visible hand-object interaction."}
+{"query_id":"castle_smoke:003","query":"person walking outdoors","tags":["movement","outdoor"],"notes":"Broad movement query for visual retrieval."}
+{"query_id":"castle_smoke:004","query":"person using a laptop","tags":["work","device"],"notes":"Common indoor activity with clear object evidence."}
+{"query_id":"castle_smoke:005","query":"person looking at a phone","tags":["device","daily_activity"],"notes":"Small-object interaction likely needs visual evidence."}
+{"query_id":"castle_smoke:006","query":"person cooking or preparing food","tags":["food","kitchen"],"notes":"Longer activity that may span multiple moments."}
+{"query_id":"castle_smoke:007","query":"person sitting at a desk","tags":["work","indoor"],"notes":"Coarse scene query for baseline sanity check."}
+{"query_id":"castle_smoke:008","query":"person entering or leaving a room","tags":["transition","indoor"],"notes":"Boundary/transition query."}
+{"query_id":"castle_smoke:009","query":"person riding in a vehicle","tags":["transport","movement"],"notes":"Scene-level transport query."}
+{"query_id":"castle_smoke:010","query":"person talking with another person","tags":["social","audio_visual"],"notes":"May benefit from ASR/audio evidence if speech is present."}

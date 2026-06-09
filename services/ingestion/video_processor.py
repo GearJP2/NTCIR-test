@@ -5,8 +5,9 @@ import ffmpeg
 from PIL import Image
 
 from app.schemas.media import VideoKeyframe
+from configs.model_config import get_ingestion_float
 
-_KEYFRAME_INTERVAL_SEC = 5.0   # extract one keyframe every N seconds
+_KEYFRAME_INTERVAL_SEC = 2.0   # extract one keyframe every N seconds
 
 
 def extract_audio_track(video_path: Path) -> Path:
@@ -22,11 +23,19 @@ def extract_audio_track(video_path: Path) -> Path:
     return out_path
 
 
-def extract_keyframes(video_path: Path, media_id: str) -> list[VideoKeyframe]:
+def extract_keyframes(
+    video_path: Path,
+    media_id: str,
+    interval_sec: float | None = None,
+) -> list[VideoKeyframe]:
     """
-    Extract one keyframe every `_KEYFRAME_INTERVAL_SEC` seconds using ffmpeg.
+    Extract one keyframe every `interval_sec` seconds using ffmpeg.
     Returns a list of VideoKeyframe objects pointing to saved JPEG files.
     """
+    interval_sec = resolve_keyframe_interval_sec(interval_sec)
+    if interval_sec <= 0:
+        raise ValueError("interval_sec must be positive")
+
     out_dir = video_path.parent / "keyframes"
     out_dir.mkdir(exist_ok=True)
 
@@ -35,8 +44,7 @@ def extract_keyframes(video_path: Path, media_id: str) -> list[VideoKeyframe]:
     duration = float(probe["format"]["duration"])
 
     keyframes: list[VideoKeyframe] = []
-    t = 0.0
-    while t < duration:
+    for t in keyframe_timestamps(duration, interval_sec):
         frame_id = str(uuid.uuid4())
         out_path = out_dir / f"{frame_id}.jpg"
         (
@@ -55,6 +63,30 @@ def extract_keyframes(video_path: Path, media_id: str) -> list[VideoKeyframe]:
                     image_path=str(out_path),
                 )
             )
-        t += _KEYFRAME_INTERVAL_SEC
 
     return keyframes
+
+
+def keyframe_timestamps(
+    duration_sec: float,
+    interval_sec: float | None = None,
+) -> list[float]:
+    """Return keyframe timestamps for baseline visual evidence sampling."""
+    interval_sec = resolve_keyframe_interval_sec(interval_sec)
+    if duration_sec <= 0:
+        return []
+    if interval_sec <= 0:
+        raise ValueError("interval_sec must be positive")
+
+    timestamps: list[float] = []
+    t = 0.0
+    while t < duration_sec:
+        timestamps.append(round(t, 6))
+        t += interval_sec
+    return timestamps
+
+
+def resolve_keyframe_interval_sec(interval_sec: float | None = None) -> float:
+    if interval_sec is not None:
+        return float(interval_sec)
+    return get_ingestion_float("keyframe_interval_sec", _KEYFRAME_INTERVAL_SEC)

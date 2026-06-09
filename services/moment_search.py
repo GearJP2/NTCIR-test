@@ -40,17 +40,23 @@ class MomentSearchService:
             duration_sec=request.duration_sec,
         )
         limit = max(request.top_k * 5, 25)
-        visual_hits = _search_visual_evidence(
+        visual_hits = _search_evidence_safely(
+            source_type="visual",
+            search_fn=_search_visual_evidence,
             media_id=request.media_id,
             query=request.query,
             limit=limit,
         )
-        asr_hits = _search_asr_evidence(
+        asr_hits = _search_evidence_safely(
+            source_type="asr",
+            search_fn=_search_asr_evidence,
             media_id=request.media_id,
             query=request.query,
             limit=limit,
         )
-        audio_hits = _search_audio_evidence(
+        audio_hits = _search_evidence_safely(
+            source_type="audio",
+            search_fn=_search_audio_evidence,
             media_id=request.media_id,
             query=request.query,
             limit=limit,
@@ -93,6 +99,25 @@ def _empty_response(request: MomentSearchRequest, profile_name: str) -> MomentSe
         results=[],
         total=0,
     )
+
+
+def _search_evidence_safely(
+    source_type: str,
+    search_fn,
+    media_id: str,
+    query: str,
+    limit: int,
+) -> list[EvidenceHit]:
+    try:
+        return search_fn(media_id=media_id, query=query, limit=limit)
+    except Exception as exc:
+        logger.warning(
+            "moment_search.evidence_failed",
+            source_type=source_type,
+            media_id=media_id,
+            error=str(exc),
+        )
+        return []
 
 
 def _search_visual_evidence(media_id: str, query: str, limit: int) -> list[EvidenceHit]:

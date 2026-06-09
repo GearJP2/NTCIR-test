@@ -35,7 +35,7 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Add `activitynet_visual_heavy` and `castle_lifelog_balanced` Evaluation Profiles.
 - [x] Update Search Interface to require selected video before search.
 - [x] Render result timestamps and seek the video player to `start_sec` when clicked.
-- [ ] Add CASTLE Curated Query Set for manual inspection.
+- [x] Add CASTLE Curated Query Set for manual inspection.
 - [x] Add ActivityNet dev50 manifest generation script.
 - [x] Add evaluator runner that loads a manifest, calls Moment Search, and reports Recall@10/mAP@10.
 
@@ -60,11 +60,56 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Visual-only `MomentSearchService` uses CLIP text query embedding, searches `visual_keyframes`, and normalizes frame hits into fixed-window `VideoMoment` results.
 - [x] ASR/text evidence search uses `TextEncoder`, searches `text_transcripts`, and merges transcript interval hits with visual frame hits.
 - [x] Audio evidence search uses CLAP text query embedding, searches `audio_segments`, and merges audio interval hits with visual/ASR hits.
+- [x] Moment Search isolates per-modality failures so one missing encoder/collection does not fail the whole request.
+- [x] CASTLE smoke Curated Query Set in `data/curated_queries/castle_smoke.jsonl`.
+- [x] Curated query loader in `evaluation/curated_queries.py`.
+- [x] Manual inspection runner in `evaluation/castle_inspection.py`.
+- [x] Ingestion keyframe sampling reads `configs/model_config.yaml` and defaults to 2 seconds, matching ADR-0006.
+- [x] Single-query Moment Search CLI in `scripts/search_moments.py`.
 
 ## Current Next Slice
 
 - [ ] Add summary evidence search if/when generated summaries have their own indexed field.
-- [ ] Add CASTLE Curated Query Set for manual inspection.
+- [ ] Run CASTLE manual inspection against indexed CASTLE data.
+- [ ] Run Moment Search end-to-end against indexed ActivityNet data.
+
+## Command Cookbook
+
+Build an ActivityNet dev manifest after videos are available locally:
+
+```bash
+python scripts/build_activitynet_manifest.py \
+  --video-root data/activitynet/videos \
+  --output-path data/manifests/activitynet_dev50.jsonl
+```
+
+Run ActivityNet temporal evaluation against the Moment Search service:
+
+```bash
+python -m evaluation.moment_evaluator \
+  data/manifests/activitynet_dev50.jsonl \
+  --profile-name activitynet_visual_heavy
+```
+
+Run CASTLE manual inspection against one indexed recording:
+
+```bash
+python -m evaluation.castle_inspection \
+  --media-id castle_recording_001 \
+  --duration-sec 3600 \
+  --queries-path data/curated_queries/castle_smoke.jsonl \
+  --output-path data/inspection/castle_smoke_results.jsonl
+```
+
+Run one Moment Search query from the shell:
+
+```bash
+python scripts/search_moments.py \
+  --media-id v_123 \
+  --duration-sec 120 \
+  --query "woman doing sit ups" \
+  --profile activitynet_visual_heavy
+```
 
 ## Domain Docs
 

@@ -11,6 +11,11 @@ class FakeVisualEncoder:
         return [np.ones(768, dtype=np.float32)]
 
 
+class FailingVisualEncoder:
+    def encode_text(self, texts):
+        raise RuntimeError("clip unavailable")
+
+
 class FakeTextEncoder:
     def encode(self, text):
         assert text == "woman doing sit ups"
@@ -162,3 +167,43 @@ async def test_moment_search_service_returns_empty_without_duration(monkeypatch)
 
     assert response.results == []
     assert response.total == 0
+
+
+@pytest.mark.asyncio
+async def test_moment_search_service_continues_when_one_modality_fails(monkeypatch):
+    fake_milvus = FakeMilvus()
+    monkeypatch.setattr(
+        "services.embedding.visual_encoder.VisualEncoder",
+        lambda: FailingVisualEncoder(),
+    )
+    monkeypatch.setattr(
+        "services.embedding.text_encoder.TextEncoder",
+        lambda: FakeTextEncoder(),
+    )
+    monkeypatch.setattr(
+        "services.embedding.clap_encoder.ClapEncoder",
+        lambda: FakeClapEncoder(),
+    )
+    monkeypatch.setattr(
+        "storage.milvus.client.get_milvus_client",
+        lambda: fake_milvus,
+    )
+
+    response = await MomentSearchService().run(
+        MomentSearchRequest(
+            media_id="v_123",
+            query="woman doing sit ups",
+            top_k=3,
+            duration_sec=30.0,
+            profile="activitynet_visual_heavy",
+        )
+    )
+
+    assert response.total == 3
+    evidence_sources = {
+        evidence.source_type
+        for moment in response.results
+        for evidence in moment.evidence
+    }
+    assert "visual" not in evidence_sources
+    assert {"asr", "audio"}.issubset(evidence_sources)

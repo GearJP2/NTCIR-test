@@ -30,7 +30,7 @@ ingestion:
   vad_aggressiveness: 2         # 0–3
   min_segment_sec: 1.0
   max_segment_sec: 30.0
-  keyframe_interval_sec: 5.0
+  keyframe_interval_sec: 2.0
   transcript_max_words_per_chunk: 80
 
 retrieval:
