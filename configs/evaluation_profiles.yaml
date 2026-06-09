@@ -1,0 +1,20 @@
+profiles:
+  activitynet_visual_heavy:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 0.60
+      asr: 0.25
+      audio: 0.10
+      summary: 0.05
+
+  castle_lifelog_balanced:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: null
+    modality_weights:
+      visual: 0.35
+      asr: 0.35
+      audio: 0.20
+      summary: 0.10
