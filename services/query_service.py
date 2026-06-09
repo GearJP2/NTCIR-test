@@ -34,6 +34,7 @@ import structlog
 
 from app.core.config import settings
 from app.schemas.search import EpisodicHit, EpisodicSearchResponse, LLMReasoning
+from storage.milvus.milvus_service import MilvusService
 
 logger = structlog.get_logger(__name__)
 
@@ -83,7 +84,6 @@ class QueryService:
         )
 
         # ── Step 2: Vector → Milvus ANN search ───────────────────────────────
-        from storage.milvus.milvus_service import MilvusService
         raw_hits = MilvusService(embedding_dim=query_vector.shape[0]).search(
             query_vector=query_vector,
             top_k=top_k,

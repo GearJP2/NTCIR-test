@@ -32,6 +32,7 @@ import structlog
 from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
 
 from app.core.exceptions import StorageError
+from storage.milvus.index_params import hnsw_cosine_index
 
 logger = structlog.get_logger(__name__)
 
@@ -55,15 +56,6 @@ _OUTPUT_FIELDS = [
     "embedding_model",
     "created_at",
 ]
-
-_HNSW_INDEX_PARAMS = {
-    "index_type": "HNSW",
-    "metric_type": "COSINE",
-    "params": {
-        "M": 16,             # bi-directional link count (higher → better recall, more RAM)
-        "efConstruction": 256,  # build-time search depth
-    },
-}
 
 _SEARCH_PARAMS = {
     "metric_type": "COSINE",
@@ -153,8 +145,7 @@ class MilvusService:
             )
             self._client.create_index(
                 collection_name=EPISODIC_COLLECTION,
-                field_name="embedding",
-                index_params=_HNSW_INDEX_PARAMS,
+                index_params=hnsw_cosine_index("embedding", ef_construction=256),
             )
             self._client.load_collection(EPISODIC_COLLECTION)
             logger.info(

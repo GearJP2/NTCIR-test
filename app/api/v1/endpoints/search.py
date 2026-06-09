@@ -20,6 +20,7 @@ from app.schemas.search import (
     SearchRequest,
     SearchResponse,
 )
+from services.query_service import QueryService
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -48,8 +49,6 @@ async def search_episodic(request: EpisodicSearchRequest) -> EpisodicSearchRespo
     3. Presigned MinIO URLs hydrated on each hit  
     4. (optional) WorldMM prompt → LLM → structured `LLMReasoning` response
     """
-    from services.query_service import QueryService
-
     try:
         service = QueryService(embedder_name=request.embedder)
         response = await service.run(

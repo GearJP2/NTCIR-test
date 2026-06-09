@@ -1,3 +1,25 @@
 .agents/
 skills-lock.json
 .out-of-scope/
+
+# Environment & secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Model cache & checkpoints
+model_cache/
+.index_checkpoint.json
+
+# Node
+frontend/node_modules/
+frontend/dist/

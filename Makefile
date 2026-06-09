@@ -41,7 +41,10 @@ ingest:
 	python scripts/ingest_corpus.py --corpus-dir data/sample/
 
 build-index:
-	python scripts/build_index.py
+	python scripts/train_and_index.py
+
+index-dry-run:
+	python scripts/train_and_index.py --max-items 5 --dry-run
 
 eval:
 	python scripts/export_results.py && python -m evaluation.evaluator

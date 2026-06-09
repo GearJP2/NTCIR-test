@@ -1,5 +1,6 @@
-from pymilvus import DataType, MilvusClient
+from pymilvus import MilvusClient
 
+from storage.milvus.index_params import hnsw_cosine_index
 from storage.milvus.schemas import (
     AUDIO_COLLECTION,
     TEXT_COLLECTION,
@@ -8,9 +9,6 @@ from storage.milvus.schemas import (
     text_schema,
     visual_schema,
 )
-
-_HNSW_INDEX = {"index_type": "HNSW", "metric_type": "COSINE", "params": {"M": 16, "efConstruction": 200}}
-
 
 def ensure_all_collections(client: MilvusClient) -> None:
     # Core search collections
@@ -35,8 +33,7 @@ def _ensure(
         client.create_collection(collection_name=name, schema=schema)
         client.create_index(
             collection_name=name,
-            field_name=vec_field,
-            index_params=_HNSW_INDEX,
+            index_params=hnsw_cosine_index(vec_field),
         )
         client.load_collection(name)
 
