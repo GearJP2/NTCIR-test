@@ -28,6 +28,62 @@ class SearchResponse(BaseModel):
     total: int
 
 
+# ── Moment search (canonical long-video benchmark contract) ─────────────────
+
+class Evidence(BaseModel):
+    source_type: Literal["visual", "audio", "asr", "summary"]
+    score: float = Field(ge=0.0)
+    source_id: str | None = None
+    timestamp_sec: float | None = None
+    start_sec: float | None = None
+    end_sec: float | None = None
+    text: str | None = None
+
+
+class VideoMoment(BaseModel):
+    rank: int = Field(ge=1)
+    moment_id: str
+    media_id: str
+    start_sec: float = Field(ge=0.0)
+    end_sec: float = Field(ge=0.0)
+    score: float = Field(ge=0.0)
+    thumbnail_sec: float = Field(ge=0.0)
+    evidence: list[Evidence] = Field(default_factory=list)
+
+
+class MomentSearchRequest(BaseModel):
+    media_id: str = Field(
+        ...,
+        min_length=1,
+        description="Selected video/media ID that bounds the single-video search scope.",
+    )
+    query: str = Field(
+        ...,
+        min_length=3,
+        max_length=1024,
+        description="Natural-language Semantic Query describing the moment to retrieve.",
+    )
+    top_k: int = Field(default=10, ge=1, le=100)
+    duration_sec: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Optional selected-video duration used for fixed-window generation.",
+    )
+    profile: str = Field(
+        default="activitynet_visual_heavy",
+        description="Evaluation Profile controlling modality weights and matching assumptions.",
+    )
+
+
+class MomentSearchResponse(BaseModel):
+    media_id: str
+    query: str
+    top_k: int
+    profile: str
+    results: list[VideoMoment]
+    total: int
+
+
 # ── Episodic memory search (csat_episodic_memory collection) ─────────────────
 
 class EpisodicSearchRequest(BaseModel):

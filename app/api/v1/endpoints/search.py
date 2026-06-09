@@ -17,13 +17,52 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.search import (
     EpisodicSearchRequest,
     EpisodicSearchResponse,
+    MomentSearchRequest,
+    MomentSearchResponse,
     SearchRequest,
     SearchResponse,
 )
+from services.moment_search import MomentSearchService
 from services.query_service import QueryService
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
+
+
+# ── Primary benchmark endpoint: Video Moment search ──────────────────────────
+
+@router.post(
+    "/moments",
+    response_model=MomentSearchResponse,
+    summary="Semantic search over a selected long video",
+    description=(
+        "Canonical benchmark-facing search contract. Searches within one "
+        "selected media item and returns Top-K ranked Video Moments with scores "
+        "and source-specific evidence. LLM reasoning is intentionally excluded "
+        "from this path."
+    ),
+)
+async def search_moments(request: MomentSearchRequest) -> MomentSearchResponse:
+    try:
+        response = await MomentSearchService().run(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        logger.exception("search.moments.runtime_error", media_id=request.media_id)
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("search.moments.unhandled", media_id=request.media_id)
+        raise HTTPException(status_code=500, detail="Moment search failed unexpectedly.") from exc
+
+    logger.info(
+        "search.moments.done",
+        media_id=response.media_id,
+        query=response.query[:80],
+        hits=response.total,
+        profile=response.profile,
+        top_k=response.top_k,
+    )
+    return response
 
 
 # ── Primary endpoint: Episodic memory search ──────────────────────────────────
