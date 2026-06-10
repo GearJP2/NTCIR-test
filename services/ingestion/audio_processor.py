@@ -1,9 +1,11 @@
 import uuid
+from math import gcd
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
 import webrtcvad
+from scipy import signal
 
 from app.schemas.media import AudioSegment
 
@@ -22,9 +24,7 @@ def segment_audio(
     VAD-based audio segmentation using webrtcvad.
     Returns a list of AudioSegment objects with trimmed mono 16 kHz wav files.
     """
-    import librosa
-
-    audio, sr = librosa.load(str(audio_path), sr=_VAD_SAMPLE_RATE, mono=True)
+    audio = load_audio_mono(audio_path, _VAD_SAMPLE_RATE)
     pcm = (audio * 32768).astype(np.int16).tobytes()
 
     vad = webrtcvad.Vad(_AGGRESSIVENESS)
@@ -84,3 +84,13 @@ def segment_audio(
         segments.append(_flush(seg_start, seg_frames))
 
     return segments
+
+
+def load_audio_mono(audio_path: Path, target_sr: int) -> np.ndarray:
+    audio, sr = sf.read(str(audio_path), dtype="float32", always_2d=False)
+    if audio.ndim > 1:
+        audio = audio.mean(axis=1)
+    if sr != target_sr:
+        divisor = gcd(sr, target_sr)
+        audio = signal.resample_poly(audio, target_sr // divisor, sr // divisor)
+    return np.clip(audio, -1.0, 1.0).astype(np.float32)

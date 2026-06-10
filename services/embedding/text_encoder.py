@@ -18,6 +18,9 @@ class TextEncoder(Encoder):
         return self.encode_batch([input_])[0]
 
     def encode_batch(self, inputs: list[str]) -> list[np.ndarray]:
+        if not inputs:
+            return []
+
         from model_zoo.registry import ModelRegistry
         model = ModelRegistry.get("text_encoder")
         embeddings = model.encode(inputs, normalize_embeddings=True, show_progress_bar=False)

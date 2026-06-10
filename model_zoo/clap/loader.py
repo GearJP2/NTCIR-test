@@ -49,7 +49,7 @@ class _HFClapModule:
             waveforms.append(wav)
 
         inputs = self._processor(
-            audios=[w.tolist() for w in waveforms],
+            audio=[w.tolist() for w in waveforms],
             return_tensors="pt",
             sampling_rate=CLAP_SR,
             padding=True,
@@ -58,6 +58,7 @@ class _HFClapModule:
 
         with torch.no_grad():
             features = self._model.get_audio_features(**inputs)
+            features = _feature_tensor(features)
             features = features / features.norm(dim=-1, keepdim=True)
 
         return features if use_tensor else features.cpu().numpy()
@@ -70,9 +71,14 @@ class _HFClapModule:
 
         with torch.no_grad():
             features = self._model.get_text_features(**inputs)
+            features = _feature_tensor(features)
             features = features / features.norm(dim=-1, keepdim=True)
 
         return features if use_tensor else features.cpu().numpy()
+
+
+def _feature_tensor(features):
+    return getattr(features, "pooler_output", features)
 
 
 def load_clap() -> _HFClapModule:

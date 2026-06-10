@@ -37,7 +37,9 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Render result timestamps and seek the video player to `start_sec` when clicked.
 - [x] Add CASTLE Curated Query Set for manual inspection.
 - [x] Add ActivityNet dev50 manifest generation script.
+- [x] Add ActivityNet dev50 video downloader for playable YouTube subset.
 - [x] Add evaluator runner that loads a manifest, calls Moment Search, and reports Recall@10/mAP@10.
+- [x] Add ActivityNet ingestion command that preserves filename-based `media_id` for benchmark lookup.
 
 ## Completed Slices
 
@@ -66,14 +68,48 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Manual inspection runner in `evaluation/castle_inspection.py`.
 - [x] Ingestion keyframe sampling reads `configs/model_config.yaml` and defaults to 2 seconds, matching ADR-0006.
 - [x] Single-query Moment Search CLI in `scripts/search_moments.py`.
+- [x] Media index diagnostics in `evaluation/index_diagnostics.py` and `scripts/check_media_index.py`.
+- [x] Local ActivityNet dev50 subset downloaded under `data/activitynet/videos/`.
+- [x] ActivityNet dev50 manifest regenerated at `data/manifests/activitynet_dev50.jsonl`.
+- [x] Manifest validation passed: 50 videos, 171 Evaluation Queries, 0 missing local video files.
+- [x] `scripts/ingest_corpus.py` supports `--media-id-source filename`, so indexed `media_id` can match ActivityNet manifest IDs.
+- [x] `make ingest-activitynet` ingests only video paths listed in the ActivityNet manifest, avoiding extra downloaded/intermediate files.
+- [x] Video preprocessing no longer requires system `ffmpeg`/`ffprobe`; `services/ingestion/video_processor.py` uses PyAV.
+- [x] VAD audio segmentation no longer depends on `librosa.load`; `services/ingestion/audio_processor.py` uses `soundfile` and `scipy.signal.resample_poly`.
+- [x] Ingestion must run outside the sandbox/escalated when it needs local Docker Milvus at `localhost:19530`.
+- [x] `make ingest-activitynet` sets `HF_HUB_DISABLE_XET=1` to avoid stalled Hugging Face xet downloads.
+- [x] Text encoder `sentence-transformers/all-mpnet-base-v2` was preloaded successfully into `./model_cache`.
+- [x] CLAP encoder supports current Transformers processor API (`audio=` and `pooler_output`).
+- [x] Empty audio/text batches are skipped safely, so videos with no VAD speech can still index visual evidence.
+- [x] `scripts/ingest_corpus.py` supports `--start-at-media-id` for resume.
+- [x] `scripts/ingest_corpus.py` supports repeatable `--only-media-id` for targeted backfill.
+- [x] ActivityNet dev50 ingestion completed in Milvus: 50/50 manifest media IDs indexed, 0 missing, 0 extra.
+- [x] `v_T_5ANYuDWOA` validated as a no-speech case with visual-only evidence indexed successfully.
+- [x] Moment Search response score normalization handles negative raw ANN scores without schema failures.
+- [x] One ActivityNet Moment Search smoke query completed against indexed Milvus data and returned Top-10 results.
+- [x] ActivityNet dev50 temporal evaluation completed with `activitynet_visual_heavy`: `Recall@10 = 0.47953216374269003`, `mAP@10 = 0.2946300937529008`, `tIoU >= 0.3`, 50 videos, 171 queries.
 
 ## Current Next Slice
 
 - [ ] Add summary evidence search if/when generated summaries have their own indexed field.
+- [ ] Use `scripts/check_media_index.py` before running manual or benchmark searches against real indexed media.
+- [ ] Save per-query ActivityNet evaluation outputs for failure analysis and profile tuning.
+- [ ] Tune ActivityNet Evaluation Profile weights against dev50 baseline.
 - [ ] Run CASTLE manual inspection against indexed CASTLE data.
-- [ ] Run Moment Search end-to-end against indexed ActivityNet data.
 
 ## Command Cookbook
+
+Make target shortcuts:
+
+```bash
+make build-activitynet-manifest
+make eval-moments MANIFEST=data/manifests/activitynet_dev50.jsonl
+make ingest-activitynet
+make list-indexed-media
+make check-media-index MEDIA_ID=v_123
+make search-moments MEDIA_ID=v_123 DURATION_SEC=120 QUERY="woman doing sit ups"
+make inspect-castle MEDIA_ID=castle_recording_001 DURATION_SEC=3600
+```
 
 Build an ActivityNet dev manifest after videos are available locally:
 
@@ -81,6 +117,17 @@ Build an ActivityNet dev manifest after videos are available locally:
 python scripts/build_activitynet_manifest.py \
   --video-root data/activitynet/videos \
   --output-path data/manifests/activitynet_dev50.jsonl
+```
+
+Download a playable ActivityNet dev subset and write a manifest:
+
+```bash
+python scripts/download_activitynet_dev.py \
+  --split val1 \
+  --target-videos 50 \
+  --max-attempts 500 \
+  --output-dir data/activitynet/videos \
+  --manifest-path data/manifests/activitynet_dev50.jsonl
 ```
 
 Run ActivityNet temporal evaluation against the Moment Search service:
@@ -111,7 +158,19 @@ python scripts/search_moments.py \
   --profile activitynet_visual_heavy
 ```
 
+Check whether one media ID has indexed Moment Search evidence:
+
+```bash
+python scripts/list_indexed_media.py \
+  --sample-limit 1000
+
+python scripts/check_media_index.py \
+  --media-id v_123 \
+  --sample-limit 100
+```
+
 ## Domain Docs
 
 - Glossary: `CONTEXT.md`
 - ADRs: `docs/adr/`
+- Real-data validation runbook: `docs/MOMENT_SEARCH_RUNBOOK.md`

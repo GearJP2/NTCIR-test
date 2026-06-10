@@ -27,11 +27,9 @@ async def run_ingestion_pipeline(asset: MediaAsset, local_path: Path) -> dict:
 
     if is_video:
         logger.info("pipeline.extract_audio", media_id=asset.media_id)
-        audio_path = await asyncio.to_thread(extract_audio_track, local_path)
+        audio_path = extract_audio_track(local_path)
         logger.info("pipeline.extract_keyframes", media_id=asset.media_id)
-        keyframes: list[VideoKeyframe] = await asyncio.to_thread(
-            extract_keyframes, local_path, asset.media_id
-        )
+        keyframes: list[VideoKeyframe] = extract_keyframes(local_path, asset.media_id)
     else:
         keyframes = []
 

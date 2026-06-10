@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -51,6 +52,32 @@ def test_load_evaluation_manifest_defaults_query_id(tmp_path):
     query = iter_evaluation_queries(load_evaluation_manifest(manifest))[0]
 
     assert query.query_id == "v_123:0"
+
+
+def test_load_evaluation_manifest_supports_cwd_relative_video_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    video = tmp_path / "data" / "activitynet" / "videos" / "v_123.mp4"
+    video.parent.mkdir(parents=True)
+    video.write_bytes(b"video")
+    manifest = tmp_path / "data" / "manifests" / "activitynet_dev50.jsonl"
+    manifest.parent.mkdir(parents=True)
+    row = {
+        "media_id": "v_123",
+        "video_path": "data/activitynet/videos/v_123.mp4",
+        "duration_sec": 120.0,
+        "queries": [
+            {
+                "query": "A woman is doing sit ups",
+                "ground_truth": {"start_sec": 39.8, "end_sec": 54.6},
+            }
+        ],
+    }
+    manifest.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    videos = load_evaluation_manifest(manifest)
+
+    assert videos[0].video_path == Path("data/activitynet/videos/v_123.mp4")
+    assert videos[0].video_path.exists()
 
 
 def test_load_evaluation_manifest_rejects_invalid_interval(tmp_path):

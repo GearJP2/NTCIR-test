@@ -23,6 +23,9 @@ class ClapEncoder(Encoder):
 
     def encode_batch(self, inputs: list[str]) -> list[np.ndarray]:
         """Encode a batch of audio file paths."""
+        if not inputs:
+            return []
+
         from model_zoo.registry import ModelRegistry
         model = ModelRegistry.get("clap")
 

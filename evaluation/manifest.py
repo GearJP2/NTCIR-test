@@ -66,9 +66,7 @@ def iter_evaluation_queries(videos: list[EvaluationVideo]) -> list[EvaluationQue
 
 def _parse_video(row: dict[str, Any], base_dir: Path) -> EvaluationVideo:
     media_id = str(row["media_id"])
-    video_path = Path(str(row["video_path"]))
-    if not video_path.is_absolute():
-        video_path = base_dir / video_path
+    video_path = _resolve_video_path(Path(str(row["video_path"])), base_dir)
 
     queries = tuple(_parse_query(media_id, item, i) for i, item in enumerate(row["queries"]))
     if not queries:
@@ -81,6 +79,16 @@ def _parse_video(row: dict[str, Any], base_dir: Path) -> EvaluationVideo:
         duration_sec=float(duration) if duration is not None else None,
         queries=queries,
     )
+
+
+def _resolve_video_path(video_path: Path, base_dir: Path) -> Path:
+    if video_path.is_absolute():
+        return video_path
+
+    base_relative = base_dir / video_path
+    if base_relative.exists() or not video_path.exists():
+        return base_relative
+    return video_path
 
 
 def _parse_query(media_id: str, row: dict[str, Any], index: int) -> EvaluationQuery:

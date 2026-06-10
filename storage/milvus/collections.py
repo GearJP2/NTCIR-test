@@ -36,6 +36,18 @@ def _ensure(
             index_params=hnsw_cosine_index(vec_field),
         )
         client.load_collection(name)
+        return
+
+    try:
+        client.load_collection(name)
+    except Exception as exc:
+        if "index not found" not in str(exc).lower():
+            raise
+        client.create_index(
+            collection_name=name,
+            index_params=hnsw_cosine_index(vec_field),
+        )
+        client.load_collection(name)
 
 
 def upsert_audio(client: MilvusClient, segments, vectors) -> None:
@@ -49,6 +61,8 @@ def upsert_audio(client: MilvusClient, segments, vectors) -> None:
         }
         for seg, vec in zip(segments, vectors)
     ]
+    if not data:
+        return
     client.upsert(collection_name=AUDIO_COLLECTION, data=data)
 
 
@@ -66,6 +80,8 @@ def upsert_text(client: MilvusClient, chunks, vectors) -> None:
         }
         for chunk, vec in zip(chunks, vectors)
     ]
+    if not data:
+        return
     client.upsert(collection_name=TEXT_COLLECTION, data=data)
 
 
@@ -79,4 +95,6 @@ def upsert_visual(client: MilvusClient, keyframes, vectors) -> None:
         }
         for kf, vec in zip(keyframes, vectors)
     ]
+    if not data:
+        return
     client.upsert(collection_name=VISUAL_COLLECTION, data=data)

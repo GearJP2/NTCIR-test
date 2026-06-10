@@ -104,6 +104,25 @@ def test_evidence_hits_to_video_moments_applies_source_weights():
     assert moments[0].score == 1.2
 
 
+def test_evidence_hits_to_video_moments_clamps_negative_scores_for_response_schema():
+    windows = generate_fixed_windows("v_123", duration_sec=30.0)
+    hits = [
+        EvidenceHit(
+            source_type="visual",
+            media_id="v_123",
+            score=-0.04,
+            source_id="frame-1",
+            timestamp_sec=12.0,
+        )
+    ]
+
+    moments = evidence_hits_to_video_moments("v_123", windows, hits)
+
+    assert len(moments) == 2
+    assert moments[0].score == 0.0
+    assert moments[0].evidence[0].score == 0.0
+
+
 def test_evidence_hits_to_video_moments_ignores_other_media():
     windows = generate_fixed_windows("v_123", duration_sec=30.0)
     hits = [

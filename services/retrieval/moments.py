@@ -92,7 +92,7 @@ def evidence_hits_to_video_moments(
         "summary": 1.0,
     }
 
-    scored: list[tuple[float, VideoWindow, list[Evidence]]] = []
+    scored: list[tuple[float, float, VideoWindow, list[Evidence]]] = []
     for window in windows:
         matched_hits = [
             hit for hit in hits if hit.media_id == media_id and _hit_overlaps_window(hit, window)
@@ -101,8 +101,8 @@ def evidence_hits_to_video_moments(
             continue
 
         evidence = [_to_evidence(hit) for hit in matched_hits]
-        score = max(hit.score * weights.get(hit.source_type, 1.0) for hit in matched_hits)
-        scored.append((score, window, evidence))
+        raw_score = max(hit.score * weights.get(hit.source_type, 1.0) for hit in matched_hits)
+        scored.append((raw_score, _public_score(raw_score), window, evidence))
 
     ranked = sorted(scored, key=lambda item: item[0], reverse=True)[:top_k]
     return [
@@ -116,7 +116,7 @@ def evidence_hits_to_video_moments(
             thumbnail_sec=window.thumbnail_sec,
             evidence=evidence,
         )
-        for rank, (score, window, evidence) in enumerate(ranked, start=1)
+        for rank, (_raw_score, score, window, evidence) in enumerate(ranked, start=1)
     ]
 
 
@@ -137,10 +137,14 @@ def _hit_overlaps_window(hit: EvidenceHit, window: VideoWindow) -> bool:
 def _to_evidence(hit: EvidenceHit) -> Evidence:
     return Evidence(
         source_type=hit.source_type,
-        score=hit.score,
+        score=_public_score(hit.score),
         source_id=hit.source_id,
         timestamp_sec=hit.timestamp_sec,
         start_sec=hit.start_sec,
         end_sec=hit.end_sec,
         text=hit.text,
     )
+
+
+def _public_score(score: float) -> float:
+    return max(0.0, score)
