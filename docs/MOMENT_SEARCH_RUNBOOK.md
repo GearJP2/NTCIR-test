@@ -11,6 +11,55 @@ matches manifest IDs:
 make ingest-activitynet
 ```
 
+For faster visual-only scale-up runs, skip audio extraction, VAD, ASR, and audio embeddings:
+
+```bash
+make ingest-activitynet \
+  MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl \
+  MODALITIES="visual"
+```
+
+For a coarse scale-up run, increase the visual sampling interval:
+
+```bash
+make ingest-activitynet \
+  MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl \
+  MODALITIES="visual" \
+  KEYFRAME_INTERVAL_SEC=10 \
+  SKIP_INDEXED=1
+```
+
+For a targeted smoke/backfill run, pass one or more media IDs:
+
+```bash
+make ingest-activitynet \
+  MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl \
+  MODALITIES="visual" \
+  KEYFRAME_INTERVAL_SEC=10 \
+  ONLY_MEDIA_ID="v_123 v_456"
+```
+
+`SKIP_INDEXED=1` checks the selected modality collections before queuing work. For example, a visual-only run skips media IDs that already have at least one `visual_keyframes` row, while a full `visual audio asr` run only skips media IDs that have rows in all three modality collections.
+
+To build a manifest for missing modality evidence and backfill audio/ASR only:
+
+```bash
+python scripts/build_missing_modality_manifest.py \
+  --manifest-path data/manifests/activitynet_dev200.jsonl \
+  --output-path data/manifests/activitynet_dev200_missing_audio_asr.jsonl \
+  --modality audio \
+  --modality asr
+
+make ingest-activitynet \
+  MANIFEST=data/manifests/activitynet_dev200_missing_audio_asr.jsonl \
+  MODALITIES="audio asr" \
+  SKIP_INDEXED=1
+```
+
+If VAD finds no speech but the video has an audio track, ingestion falls back to fixed full-track windows. This keeps non-speech audio evidence searchable and prevents audio/ASR completeness checks from staying missing only because VAD returned zero speech segments.
+
+The dev200 visual-only checkpoint measured about 3m52s for the first remaining video at the default 2-second sampling interval on the current machine, so run the remaining resume manifest in controlled batches or use a coarser interval for prototype-scale checks.
+
 List candidate media IDs sampled from Moment Search collections:
 
 ```bash
@@ -65,19 +114,86 @@ make eval-moments MANIFEST=data/manifests/activitynet_dev50.jsonl
 ```
 
 This reports `Recall@10` and `mAP@10` using the `activitynet_visual_heavy` profile and `tIoU >= 0.3`.
+It also writes:
 
-## 4. CASTLE Manual Inspection
+- `data/evaluation/activitynet_dev50_summary.json`: aggregate metrics.
+- `data/evaluation/activitynet_dev50_results.jsonl`: one row per Evaluation Query with Ground Truth Moment, Top-K result scores, tIoU, and hit/miss labels.
+- `data/evaluation/activitynet_dev50_queries.csv`: compact query-level table for spreadsheet inspection.
+- `data/evaluation/activitynet_dev50_report.md`: human-readable report with summary metrics, hit-rank distribution, and closest misses.
 
-Run the curated query set against one indexed CASTLE recording:
+For the coarse dev200 visual-only prototype baseline:
 
 ```bash
-make inspect-castle \
-  MEDIA_ID=castle_recording_001 \
-  DURATION_SEC=3600 \
-  OUTPUT=data/inspection/castle_smoke_results.jsonl
+make eval-moments \
+  MANIFEST=data/manifests/activitynet_dev200.jsonl \
+  PROFILE=activitynet_visual_only \
+  SUMMARY=data/evaluation/activitynet_dev200_visual_only_summary.json \
+  RESULTS=data/evaluation/activitynet_dev200_visual_only_results.jsonl \
+  QUERY_CSV=data/evaluation/activitynet_dev200_visual_only_queries.csv \
+  REPORT=data/evaluation/activitynet_dev200_visual_only_report.md
 ```
 
-Review the JSONL output manually in the Search Interface or by inspecting timestamps. CASTLE has no Ground Truth Moments, so these results are qualitative only.
+The current full dev200 visual-only checkpoint is `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`, `tIoU >= 0.3`, 200 videos, and 693 queries. When running from Codex sandbox, local Docker/Milvus access may require escalated execution; normal shell sessions can run the command directly.
+
+For the full dev200 multimodal profile after audio/ASR backfill:
+
+```bash
+make eval-moments \
+  MANIFEST=data/manifests/activitynet_dev200.jsonl \
+  PROFILE=activitynet_visual_heavy \
+  SUMMARY=data/evaluation/activitynet_dev200_visual_heavy_summary.json \
+  RESULTS=data/evaluation/activitynet_dev200_visual_heavy_results.jsonl \
+  QUERY_CSV=data/evaluation/activitynet_dev200_visual_heavy_queries.csv \
+  REPORT=data/evaluation/activitynet_dev200_visual_heavy_report.md
+```
+
+The current full dev200 `activitynet_visual_heavy` checkpoint is `Recall@10 = 0.455988455988456`, `mAP@10 = 0.28303499851118896`, `tIoU >= 0.3`, 200 videos, and 693 queries. This does not improve on `activitynet_visual_only`, so the next benchmark slice should tune modality weights or inspect per-query regressions before treating the multimodal profile as the baseline.
+
+Run the ActivityNet profile sweep:
+
+```bash
+make eval-activitynet-profile-sweep \
+  MANIFEST=data/manifests/activitynet_dev200.jsonl
+```
+
+This runs the default ActivityNet comparison set:
+
+- `activitynet_visual_only`
+- `activitynet_visual_asr_light`
+- `activitynet_visual_asr_medium`
+- `activitynet_visual_audio_light`
+- `activitynet_visual_audio_medium`
+- `activitynet_visual_heavy`
+
+The sweep writes:
+
+- `data/evaluation/activitynet_profile_sweep_summary.json`
+- `data/evaluation/activitynet_profile_sweep_summary.csv`
+
+Current dev200 sweep result:
+
+| Profile | Recall@10 | mAP@10 |
+| --- | ---: | ---: |
+| `activitynet_visual_only` | 0.455988455988456 | 0.283629950296617 |
+| `activitynet_visual_asr_light` | 0.455988455988456 | 0.283629950296617 |
+| `activitynet_visual_asr_medium` | 0.455988455988456 | 0.283629950296617 |
+| `activitynet_visual_audio_light` | 0.455988455988456 | 0.283629950296617 |
+| `activitynet_visual_audio_medium` | 0.455988455988456 | 0.283629950296617 |
+| `activitynet_visual_heavy` | 0.455988455988456 | 0.28303499851118896 |
+
+Use `activitynet_visual_only` as the current paper baseline. The light and medium ASR/audio variants tie visual-only, while the heavy multimodal profile slightly reduces mAP.
+
+Use `WRITE_DETAILS=1` if per-profile JSONL/CSV/Markdown reports are needed for regression analysis:
+
+```bash
+make eval-activitynet-profile-sweep \
+  MANIFEST=data/manifests/activitynet_dev200.jsonl \
+  WRITE_DETAILS=1
+```
+
+## 4. Paper Scope
+
+ActivityNet Captions is the only quantitative Evaluation Dataset for paper claims because it provides timestamped Ground Truth Moments. CASTLE is not part of the benchmark path because it has no Ground Truth Moments; keep any CASTLE tooling as legacy/manual demo support only.
 
 ## 5. Known Limits
 

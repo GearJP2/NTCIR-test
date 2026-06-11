@@ -19,6 +19,7 @@ def segment_audio(
     media_id: str,
     min_segment_sec: float = 1.0,
     max_segment_sec: float = 30.0,
+    fallback_to_full_track: bool = True,
 ) -> list[AudioSegment]:
     """
     VAD-based audio segmentation using webrtcvad.
@@ -43,10 +44,8 @@ def segment_audio(
     out_dir = audio_path.parent / "segments"
     out_dir.mkdir(exist_ok=True)
 
-    def _flush(start: float, frames_data: list[bytes]) -> AudioSegment:
-        end = start + len(frames_data) * _FRAME_DURATION_MS / 1000
-        raw = b"".join(frames_data)
-        samples = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768
+    def _write_segment(start: float, samples: np.ndarray) -> AudioSegment:
+        end = start + len(samples) / _VAD_SAMPLE_RATE
         seg_id = str(uuid.uuid4())
         out_path = out_dir / f"{seg_id}.wav"
         sf.write(str(out_path), samples, _VAD_SAMPLE_RATE)
@@ -57,6 +56,11 @@ def segment_audio(
             end_sec=end,
             audio_path=str(out_path),
         )
+
+    def _flush(start: float, frames_data: list[bytes]) -> AudioSegment:
+        raw = b"".join(frames_data)
+        samples = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768
+        return _write_segment(start, samples)
 
     for idx, speech in enumerate(is_speech):
         t = idx * _FRAME_DURATION_MS / 1000
@@ -83,6 +87,26 @@ def segment_audio(
     if in_segment and seg_frames:
         segments.append(_flush(seg_start, seg_frames))
 
+    if not segments and fallback_to_full_track and audio.size:
+        segments.extend(_fallback_segments(audio, max_segment_sec, _write_segment))
+
+    return segments
+
+
+def _fallback_segments(
+    audio: np.ndarray,
+    max_segment_sec: float,
+    write_segment,
+) -> list[AudioSegment]:
+    """Create fixed windows when VAD finds no speech, preserving non-speech audio evidence."""
+    segment_samples = max(1, int(max_segment_sec * _VAD_SAMPLE_RATE))
+    segments: list[AudioSegment] = []
+    for start_sample in range(0, len(audio), segment_samples):
+        samples = audio[start_sample: start_sample + segment_samples]
+        if not samples.size:
+            continue
+        start_sec = start_sample / _VAD_SAMPLE_RATE
+        segments.append(write_segment(start_sec, samples))
     return segments
 
 

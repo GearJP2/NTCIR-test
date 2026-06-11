@@ -40,21 +40,24 @@ class MomentSearchService:
             duration_sec=request.duration_sec,
         )
         limit = max(request.top_k * 5, 25)
-        visual_hits = _search_evidence_safely(
+        visual_hits = _search_weighted_evidence(
+            weights=profile.modality_weights,
             source_type="visual",
             search_fn=_search_visual_evidence,
             media_id=request.media_id,
             query=request.query,
             limit=limit,
         )
-        asr_hits = _search_evidence_safely(
+        asr_hits = _search_weighted_evidence(
+            weights=profile.modality_weights,
             source_type="asr",
             search_fn=_search_asr_evidence,
             media_id=request.media_id,
             query=request.query,
             limit=limit,
         )
-        audio_hits = _search_evidence_safely(
+        audio_hits = _search_weighted_evidence(
+            weights=profile.modality_weights,
             source_type="audio",
             search_fn=_search_audio_evidence,
             media_id=request.media_id,
@@ -90,6 +93,25 @@ class MomentSearchService:
         )
 
 
+def _search_weighted_evidence(
+    weights: dict,
+    source_type: str,
+    search_fn,
+    media_id: str,
+    query: str,
+    limit: int,
+) -> list[EvidenceHit]:
+    if weights.get(source_type, 0.0) <= 0.0:
+        return []
+    return _search_evidence_safely(
+        source_type=source_type,
+        search_fn=search_fn,
+        media_id=media_id,
+        query=query,
+        limit=limit,
+    )
+
+
 def _empty_response(request: MomentSearchRequest, profile_name: str) -> MomentSearchResponse:
     return MomentSearchResponse(
         media_id=request.media_id,
@@ -111,6 +133,12 @@ def _search_evidence_safely(
     try:
         return search_fn(media_id=media_id, query=query, limit=limit)
     except Exception as exc:
+        try:
+            from storage.milvus.client import get_milvus_client
+
+            get_milvus_client.cache_clear()
+        except Exception:
+            pass
         logger.warning(
             "moment_search.evidence_failed",
             source_type=source_type,
@@ -124,8 +152,9 @@ def _search_visual_evidence(media_id: str, query: str, limit: int) -> list[Evide
     from services.embedding.visual_encoder import VisualEncoder
     from storage.milvus.client import get_milvus_client
 
+    milvus = get_milvus_client()
     query_vector = VisualEncoder().encode_text([query])[0]
-    results = get_milvus_client().search(
+    results = milvus.search(
         collection_name=VISUAL_COLLECTION,
         data=[query_vector.tolist()],
         limit=limit,
@@ -157,8 +186,9 @@ def _search_asr_evidence(media_id: str, query: str, limit: int) -> list[Evidence
     from services.embedding.text_encoder import TextEncoder
     from storage.milvus.client import get_milvus_client
 
+    milvus = get_milvus_client()
     query_vector = TextEncoder().encode(query)
-    results = get_milvus_client().search(
+    results = milvus.search(
         collection_name=TEXT_COLLECTION,
         data=[query_vector.tolist()],
         limit=limit,
@@ -193,8 +223,9 @@ def _search_audio_evidence(media_id: str, query: str, limit: int) -> list[Eviden
     from services.embedding.clap_encoder import ClapEncoder
     from storage.milvus.client import get_milvus_client
 
+    milvus = get_milvus_client()
     query_vector = ClapEncoder().encode_text([query])[0]
-    results = get_milvus_client().search(
+    results = milvus.search(
         collection_name=AUDIO_COLLECTION,
         data=[query_vector.tolist()],
         limit=limit,

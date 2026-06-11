@@ -1,5 +1,6 @@
 .PHONY: dev worker test lint format ingest eval build \
-	ingest-activitynet build-activitynet-manifest eval-moments check-media-index search-moments inspect-castle
+	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
+	check-media-index search-moments inspect-castle
 
 # ── Development ────────────────────────────────────────────────────────────────
 dev:
@@ -47,7 +48,11 @@ ingest-activitynet:
 		--language en \
 		--workers $(or $(WORKERS),1) \
 		--media-id-source filename \
-		$(if $(START_AT),--start-at-media-id $(START_AT),)
+		$(if $(START_AT),--start-at-media-id $(START_AT)) \
+		$(foreach MEDIA_ID,$(ONLY_MEDIA_ID),--only-media-id $(MEDIA_ID)) \
+		$(foreach MODALITY,$(MODALITIES),--modality $(MODALITY)) \
+		$(if $(KEYFRAME_INTERVAL_SEC),--keyframe-interval-sec $(KEYFRAME_INTERVAL_SEC)) \
+		$(if $(SKIP_INDEXED),--skip-indexed)
 
 build-index:
 	python scripts/train_and_index.py
@@ -67,7 +72,20 @@ build-activitynet-manifest:
 eval-moments:
 	python -m evaluation.moment_evaluator \
 		$(or $(MANIFEST),data/manifests/activitynet_dev50.jsonl) \
-		--profile-name $(or $(PROFILE),activitynet_visual_heavy)
+		--profile-name $(or $(PROFILE),activitynet_visual_heavy) \
+		--summary-path $(or $(SUMMARY),data/evaluation/activitynet_dev50_summary.json) \
+		--results-path $(or $(RESULTS),data/evaluation/activitynet_dev50_results.jsonl) \
+		--query-csv-path $(or $(QUERY_CSV),data/evaluation/activitynet_dev50_queries.csv) \
+		--report-path $(or $(REPORT),data/evaluation/activitynet_dev50_report.md)
+
+eval-activitynet-profile-sweep:
+	python scripts/sweep_activitynet_profiles.py \
+		--manifest-path $(or $(MANIFEST),data/manifests/activitynet_dev200.jsonl) \
+		--summary-path $(or $(SUMMARY),data/evaluation/activitynet_profile_sweep_summary.json) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_profile_sweep_summary.csv) \
+		--output-dir $(or $(OUTPUT_DIR),data/evaluation/profile_sweep) \
+		$(foreach PROFILE_NAME,$(PROFILES),--profile $(PROFILE_NAME)) \
+		$(if $(WRITE_DETAILS),--write-details)
 
 check-media-index:
 	python scripts/check_media_index.py \

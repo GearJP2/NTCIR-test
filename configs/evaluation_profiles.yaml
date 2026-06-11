@@ -9,6 +9,56 @@ profiles:
       audio: 0.10
       summary: 0.05
 
+  activitynet_visual_only:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 1.0
+      asr: 0.0
+      audio: 0.0
+      summary: 0.0
+
+  activitynet_visual_asr_light:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 0.90
+      asr: 0.10
+      audio: 0.0
+      summary: 0.0
+
+  activitynet_visual_asr_medium:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 0.80
+      asr: 0.20
+      audio: 0.0
+      summary: 0.0
+
+  activitynet_visual_audio_light:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 0.85
+      asr: 0.10
+      audio: 0.05
+      summary: 0.0
+
+  activitynet_visual_audio_medium:
+    search_scope: single_video
+    top_k: 10
+    tiou_threshold: 0.3
+    modality_weights:
+      visual: 0.75
+      asr: 0.20
+      audio: 0.05
+      summary: 0.0
+
   castle_lifelog_balanced:
     search_scope: single_video
     top_k: 10

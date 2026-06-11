@@ -82,6 +82,56 @@ async def test_run_moment_evaluation_reports_temporal_metrics(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_run_moment_evaluation_writes_summary_and_per_query_results(tmp_path):
+    manifest_path = tmp_path / "manifest.jsonl"
+    summary_path = tmp_path / "summary.json"
+    results_path = tmp_path / "results.jsonl"
+    query_csv_path = tmp_path / "queries.csv"
+    report_path = tmp_path / "report.md"
+    row = {
+        "media_id": "v_123",
+        "video_path": "videos/v_123.mp4",
+        "duration_sec": 120.0,
+        "queries": [
+            {
+                "query_id": "v_123:0",
+                "query": "A woman is doing sit ups",
+                "ground_truth": {"start_sec": 39.0, "end_sec": 51.0},
+            },
+        ],
+    }
+    manifest_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    await run_moment_evaluation(
+        manifest_path=manifest_path,
+        searcher=FakeSearcher(),
+        summary_path=summary_path,
+        results_path=results_path,
+        query_csv_path=query_csv_path,
+        report_path=report_path,
+    )
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    rows = [
+        json.loads(line)
+        for line in results_path.read_text(encoding="utf-8").splitlines()
+    ]
+    csv_text = query_csv_path.read_text(encoding="utf-8")
+    report_text = report_path.read_text(encoding="utf-8")
+
+    assert summary["Recall@10"] == 1.0
+    assert len(rows) == 1
+    assert rows[0]["hit"] is True
+    assert rows[0]["hit_rank"] == 1
+    assert rows[0]["results"][0]["score"] == 0.9
+    assert rows[0]["results"][0]["tiou"] >= 0.3
+    assert "query_id,media_id,hit,hit_rank,best_tiou" in csv_text
+    assert "v_123:0,v_123,True,1" in csv_text
+    assert "# ActivityNet Moment Search Evaluation" in report_text
+    assert "- Hits: 1" in report_text
+
+
+@pytest.mark.asyncio
 async def test_run_moment_evaluation_rejects_profile_without_tiou(tmp_path):
     manifest_path = tmp_path / "manifest.jsonl"
     manifest_path.write_text(
