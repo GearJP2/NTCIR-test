@@ -1,5 +1,6 @@
 .PHONY: dev worker test lint format ingest eval build \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
+	summarize-activitynet-results compare-activitynet-results \
 	check-media-index search-moments inspect-castle
 
 # ── Development ────────────────────────────────────────────────────────────────
@@ -86,6 +87,21 @@ eval-activitynet-profile-sweep:
 		--output-dir $(or $(OUTPUT_DIR),data/evaluation/profile_sweep) \
 		$(foreach PROFILE_NAME,$(PROFILES),--profile $(PROFILE_NAME)) \
 		$(if $(WRITE_DETAILS),--write-details)
+
+summarize-activitynet-results:
+	python scripts/summarize_evaluation_results.py \
+		$(or $(SUMMARIES),data/evaluation/activitynet_dev200_visual_only_summary.json data/evaluation/activitynet_dev200_visual_heavy_summary.json data/evaluation/activitynet_profile_sweep_summary.json) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_results_table.csv) \
+		--markdown-path $(or $(MARKDOWN),data/evaluation/activitynet_results_table.md)
+
+compare-activitynet-results:
+	python scripts/compare_moment_results.py \
+		--baseline-results-path $(or $(BASELINE),data/evaluation/activitynet_dev200_visual_only_results.jsonl) \
+		--candidate-results-path $(or $(CANDIDATE),data/evaluation/activitynet_dev200_visual_heavy_results.jsonl) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_visual_only_vs_heavy_regressions.csv) \
+		--markdown-path $(or $(MARKDOWN),data/evaluation/activitynet_visual_only_vs_heavy_regressions.md) \
+		$(if $(JSON),--json-path $(JSON)) \
+		--limit $(or $(LIMIT),50)
 
 check-media-index:
 	python scripts/check_media_index.py \

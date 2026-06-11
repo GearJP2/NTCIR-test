@@ -117,13 +117,15 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Added ActivityNet tuning profiles: `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium`.
 - [x] Added `make eval-activitynet-profile-sweep` to run ActivityNet profile comparisons and write aggregate JSON/CSV.
 - [x] ActivityNet dev200 profile sweep completed. `activitynet_visual_only`, `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium` tied at `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`; `activitynet_visual_heavy` was slightly lower at `mAP@10 = 0.28303499851118896`.
+- [x] Added paper-ready result table generator: `make summarize-activitynet-results`.
+- [x] Added per-query regression report generator: `make compare-activitynet-results`.
+- [x] ActivityNet dev200 `visual_only` vs `visual_heavy` regression report completed: 316 hits for both, 0 lost hits, 0 gained hits, 4 rank regressions, and 2 rank improvements.
 
 ## Current Next Slice
 
 - [ ] Add summary evidence search if/when generated summaries have their own indexed field.
 - [ ] Use `scripts/check_media_index.py` before running manual or benchmark searches against real indexed media.
 - [ ] Promote `activitynet_visual_only` as the current ActivityNet paper baseline unless a later architecture change makes multimodal evidence improve metrics.
-- [ ] Inspect per-query regressions between the best multimodal profile and `activitynet_visual_only`.
 - [ ] Decide whether to keep coarse 10-second visual sampling as the prototype baseline before larger runs.
 
 ## Command Cookbook
@@ -136,6 +138,8 @@ make eval-moments MANIFEST=data/manifests/activitynet_dev50.jsonl
 make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_only SUMMARY=data/evaluation/activitynet_dev200_visual_only_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_only_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_only_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_only_report.md
 make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_heavy SUMMARY=data/evaluation/activitynet_dev200_visual_heavy_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_heavy_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_heavy_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_heavy_report.md
 make eval-activitynet-profile-sweep MANIFEST=data/manifests/activitynet_dev200.jsonl
+make summarize-activitynet-results
+make compare-activitynet-results
 make ingest-activitynet
 make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual"
 make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual" KEYFRAME_INTERVAL_SEC=10

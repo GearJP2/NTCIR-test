@@ -183,6 +183,28 @@ Current dev200 sweep result:
 
 Use `activitynet_visual_only` as the current paper baseline. The light and medium ASR/audio variants tie visual-only, while the heavy multimodal profile slightly reduces mAP.
 
+Build a paper-ready result table from existing summary JSON files:
+
+```bash
+make summarize-activitynet-results
+```
+
+This writes:
+
+- `data/evaluation/activitynet_results_table.csv`
+- `data/evaluation/activitynet_results_table.md`
+
+Compare per-query behavior between the current baseline and a candidate profile:
+
+```bash
+make compare-activitynet-results \
+  BASELINE=data/evaluation/activitynet_dev200_visual_only_results.jsonl \
+  CANDIDATE=data/evaluation/activitynet_dev200_visual_heavy_results.jsonl \
+  JSON=data/evaluation/activitynet_visual_only_vs_heavy_regressions.json
+```
+
+The current `visual_only` vs `visual_heavy` report shows 316 hits for both profiles, 0 lost hits, 0 gained hits, 4 worse hit ranks, and 2 better hit ranks. This explains the slightly lower multimodal mAP: heavy multimodal evidence mostly preserves hit/miss status but perturbs a few ranks downward.
+
 Use `WRITE_DETAILS=1` if per-profile JSONL/CSV/Markdown reports are needed for regression analysis:
 
 ```bash
