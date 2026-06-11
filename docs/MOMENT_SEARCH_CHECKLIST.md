@@ -11,8 +11,8 @@ This checklist captures the current product/research decisions so another agent 
 - Baseline moment unit: 10-second windows with 5-second stride.
 - Visual evidence baseline: sample one keyframe every 2 seconds; aggregate visual score per window with max frame score.
 - Retrieval ranking: per-modality retrieval, normalize hits to `Video Moment`, then late fusion.
-- ActivityNet Captions: quantitative Evaluation Dataset.
-- CASTLE2024: Development Dataset for qualitative/manual inspection only.
+- ActivityNet Captions: the sole quantitative Evaluation Dataset and paper benchmark.
+- CASTLE2024: not part of the benchmark scope because it has no Ground Truth Moments; keep only as a legacy/manual demo path if needed.
 - ActivityNet captions must not be indexed. They are only Evaluation Queries and Ground Truth Moments.
 - ASR generated from video audio may be indexed because it is video-derived evidence.
 - Early metric: `Recall@10` with `tIoU >= 0.3`.
@@ -32,7 +32,7 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Add late-fusion ranking across visual and ASR evidence using Evaluation Profiles.
 - [x] Add audio evidence to late-fusion ranking.
 - [ ] Add summary evidence to late-fusion ranking if generated summaries are indexed separately.
-- [x] Add `activitynet_visual_heavy` and `castle_lifelog_balanced` Evaluation Profiles.
+- [x] Add ActivityNet Evaluation Profiles for visual-only and multimodal benchmark runs.
 - [x] Update Search Interface to require selected video before search.
 - [x] Render result timestamps and seek the video player to `start_sec` when clicked.
 - [x] Add CASTLE Curated Query Set for manual inspection.
@@ -88,14 +88,43 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Moment Search response score normalization handles negative raw ANN scores without schema failures.
 - [x] One ActivityNet Moment Search smoke query completed against indexed Milvus data and returned Top-10 results.
 - [x] ActivityNet dev50 temporal evaluation completed with `activitynet_visual_heavy`: `Recall@10 = 0.47953216374269003`, `mAP@10 = 0.2946300937529008`, `tIoU >= 0.3`, 50 videos, 171 queries.
+- [x] ActivityNet evaluator writes aggregate metrics to `data/evaluation/activitynet_dev50_summary.json`, per-query Top-K scores/tIoU/hit labels to `data/evaluation/activitynet_dev50_results.jsonl`, compact query table to `data/evaluation/activitynet_dev50_queries.csv`, and readable report to `data/evaluation/activitynet_dev50_report.md`.
+- [x] ActivityNet dev200 manifest generated at `data/manifests/activitynet_dev200.jsonl`: 200 videos, 693 Evaluation Queries.
+- [x] ActivityNet dev200 targeted ingestion checkpoint reached: 88/200 manifest media IDs indexed, covering 303 Evaluation Queries.
+- [x] ActivityNet dev200 interim temporal evaluation completed on `data/manifests/activitynet_dev200_indexed88.jsonl` with `activitynet_visual_heavy`: `Recall@10 = 0.4884488448844885`, `mAP@10 = 0.3071114254282571`, `tIoU >= 0.3`, 88 videos, 303 queries.
+- [x] ActivityNet dev200 interim evaluator outputs written to `data/evaluation/activitynet_dev200_indexed88_summary.json`, `data/evaluation/activitynet_dev200_indexed88_results.jsonl`, `data/evaluation/activitynet_dev200_indexed88_queries.csv`, and `data/evaluation/activitynet_dev200_indexed88_report.md`.
+- [x] `scripts/ingest_corpus.py` supports selectable ingestion modalities via repeatable `--modality/--modalities` values: `visual`, `audio`, and `asr`.
+- [x] `make ingest-activitynet` supports `MODALITIES="visual"` for faster visual-only scale-up runs.
+- [x] `scripts/ingest_corpus.py` and `make ingest-activitynet` support per-run `KEYFRAME_INTERVAL_SEC` overrides for coarse visual scale-up tests without changing the default 2-second baseline config.
+- [x] `scripts/ingest_corpus.py` and `make ingest-activitynet` support `--skip-indexed` / `SKIP_INDEXED=1` so resume runs skip media IDs already indexed for all selected modalities.
+- [x] ActivityNet dev200 visual-only resume smoke indexed one more video before stopping the long batch: 89/200 manifest media IDs indexed, covering 308 Evaluation Queries.
+- [x] ActivityNet dev200 current resume manifest regenerated at `data/manifests/activitynet_dev200_missing_resume.jsonl`: 111 videos, 385 Evaluation Queries still missing from Milvus.
+- [x] ActivityNet dev200 current indexed manifest generated at `data/manifests/activitynet_dev200_indexed_current.jsonl`: 89 videos, 308 Evaluation Queries.
+- [x] ActivityNet dev200 current checkpoint evaluation completed with `activitynet_visual_heavy`: `Recall@10 = 0.4935064935064935`, `mAP@10 = 0.3113249845392702`, `tIoU >= 0.3`, 89 videos, 308 queries.
+- [x] ActivityNet dev200 current checkpoint evaluator outputs written to `data/evaluation/activitynet_dev200_indexed_current_summary.json`, `data/evaluation/activitynet_dev200_indexed_current_results.jsonl`, `data/evaluation/activitynet_dev200_indexed_current_queries.csv`, and `data/evaluation/activitynet_dev200_indexed_current_report.md`.
+- [x] ActivityNet dev200 targeted coarse visual smoke completed with `KEYFRAME_INTERVAL_SEC=10`: `v_TX8FGTL1flw` indexed in 59s with 12 keyframes, down from the earlier 2-second smoke shape of 48 keyframes.
+- [x] ActivityNet dev200 current manifests regenerated after coarse smoke: `data/manifests/activitynet_dev200_indexed_current.jsonl` has 90 videos/310 Evaluation Queries; `data/manifests/activitynet_dev200_missing_resume.jsonl` has 110 videos/383 Evaluation Queries remaining.
+- [x] ActivityNet dev200 current checkpoint evaluation refreshed after coarse smoke: `Recall@10 = 0.49032258064516127`, `mAP@10 = 0.3093164362519201`, `tIoU >= 0.3`, 90 videos, 310 queries.
+- [x] ActivityNet dev200 coarse visual ingestion is complete in the current Milvus volume: `data/manifests/activitynet_dev200_indexed_current.jsonl` has 200 videos and `data/manifests/activitynet_dev200_missing_resume.jsonl` has 0 remaining videos.
+- [x] Added `activitynet_visual_only` Evaluation Profile for visual-only prototype runs without loading text/audio encoders.
+- [x] ActivityNet full dev200 visual-only temporal evaluation completed: `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`, `tIoU >= 0.3`, 200 videos, 693 queries.
+- [x] ActivityNet full dev200 visual-only evaluator outputs written to `data/evaluation/activitynet_dev200_visual_only_summary.json`, `data/evaluation/activitynet_dev200_visual_only_results.jsonl`, `data/evaluation/activitynet_dev200_visual_only_queries.csv`, and `data/evaluation/activitynet_dev200_visual_only_report.md`.
+- [x] ActivityNet dev200 audio/ASR backfill completed in the current Milvus volume: 200/200 manifest media IDs have both `audio_segments` and `text_transcripts` evidence.
+- [x] VAD no-speech fallback creates fixed full-track audio windows, so silent/non-speech videos can still index audio/ASR evidence.
+- [x] ActivityNet full dev200 multimodal `activitynet_visual_heavy` evaluation completed: `Recall@10 = 0.455988455988456`, `mAP@10 = 0.28303499851118896`, `tIoU >= 0.3`, 200 videos, 693 queries.
+- [x] ActivityNet full dev200 multimodal evaluator outputs written to `data/evaluation/activitynet_dev200_visual_heavy_summary.json`, `data/evaluation/activitynet_dev200_visual_heavy_results.jsonl`, `data/evaluation/activitynet_dev200_visual_heavy_queries.csv`, and `data/evaluation/activitynet_dev200_visual_heavy_report.md`.
+- [x] CASTLE removed from benchmark planning; ActivityNet is the only dataset used for quantitative claims.
+- [x] Added ActivityNet tuning profiles: `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium`.
+- [x] Added `make eval-activitynet-profile-sweep` to run ActivityNet profile comparisons and write aggregate JSON/CSV.
+- [x] ActivityNet dev200 profile sweep completed. `activitynet_visual_only`, `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium` tied at `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`; `activitynet_visual_heavy` was slightly lower at `mAP@10 = 0.28303499851118896`.
 
 ## Current Next Slice
 
 - [ ] Add summary evidence search if/when generated summaries have their own indexed field.
 - [ ] Use `scripts/check_media_index.py` before running manual or benchmark searches against real indexed media.
-- [ ] Save per-query ActivityNet evaluation outputs for failure analysis and profile tuning.
-- [ ] Tune ActivityNet Evaluation Profile weights against dev50 baseline.
-- [ ] Run CASTLE manual inspection against indexed CASTLE data.
+- [ ] Promote `activitynet_visual_only` as the current ActivityNet paper baseline unless a later architecture change makes multimodal evidence improve metrics.
+- [ ] Inspect per-query regressions between the best multimodal profile and `activitynet_visual_only`.
+- [ ] Decide whether to keep coarse 10-second visual sampling as the prototype baseline before larger runs.
 
 ## Command Cookbook
 
@@ -104,11 +133,17 @@ Make target shortcuts:
 ```bash
 make build-activitynet-manifest
 make eval-moments MANIFEST=data/manifests/activitynet_dev50.jsonl
+make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_only SUMMARY=data/evaluation/activitynet_dev200_visual_only_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_only_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_only_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_only_report.md
+make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_heavy SUMMARY=data/evaluation/activitynet_dev200_visual_heavy_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_heavy_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_heavy_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_heavy_report.md
+make eval-activitynet-profile-sweep MANIFEST=data/manifests/activitynet_dev200.jsonl
 make ingest-activitynet
+make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual"
+make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual" KEYFRAME_INTERVAL_SEC=10
+make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual" KEYFRAME_INTERVAL_SEC=10 SKIP_INDEXED=1
+make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_audio_asr.jsonl MODALITIES="audio asr" SKIP_INDEXED=1
 make list-indexed-media
 make check-media-index MEDIA_ID=v_123
 make search-moments MEDIA_ID=v_123 DURATION_SEC=120 QUERY="woman doing sit ups"
-make inspect-castle MEDIA_ID=castle_recording_001 DURATION_SEC=3600
 ```
 
 Build an ActivityNet dev manifest after videos are available locally:
@@ -136,16 +171,6 @@ Run ActivityNet temporal evaluation against the Moment Search service:
 python -m evaluation.moment_evaluator \
   data/manifests/activitynet_dev50.jsonl \
   --profile-name activitynet_visual_heavy
-```
-
-Run CASTLE manual inspection against one indexed recording:
-
-```bash
-python -m evaluation.castle_inspection \
-  --media-id castle_recording_001 \
-  --duration-sec 3600 \
-  --queries-path data/curated_queries/castle_smoke.jsonl \
-  --output-path data/inspection/castle_smoke_results.jsonl
 ```
 
 Run one Moment Search query from the shell:

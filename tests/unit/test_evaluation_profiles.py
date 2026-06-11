@@ -13,6 +13,16 @@ def test_load_default_evaluation_profiles():
     assert activitynet.modality_weights["visual"] == 0.60
     assert activitynet.modality_weights["asr"] == 0.25
 
+    visual_asr_light = profiles["activitynet_visual_asr_light"]
+    assert visual_asr_light.modality_weights["visual"] == 0.90
+    assert visual_asr_light.modality_weights["asr"] == 0.10
+    assert visual_asr_light.modality_weights["audio"] == 0.0
+
+    visual_audio_medium = profiles["activitynet_visual_audio_medium"]
+    assert visual_audio_medium.modality_weights["visual"] == 0.75
+    assert visual_audio_medium.modality_weights["asr"] == 0.20
+    assert visual_audio_medium.modality_weights["audio"] == 0.05
+
     castle = profiles["castle_lifelog_balanced"]
     assert castle.tiou_threshold is None
     assert castle.modality_weights["visual"] == 0.35

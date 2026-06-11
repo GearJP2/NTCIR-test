@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Milvus
     milvus_uri: str = "http://localhost:19530"
     milvus_token: str = ""
+    milvus_timeout_sec: float = 30.0
 
     # MinIO
     minio_endpoint: str = "localhost:9000"

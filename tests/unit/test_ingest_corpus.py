@@ -5,11 +5,15 @@ from uuid import UUID
 import pytest
 
 from scripts.ingest_corpus import (
+    _ingest_all,
+    has_indexed_modalities,
     media_files_from_directory,
     media_files_from_manifest,
     media_files_matching_ids,
+    media_files_without_indexed_modalities,
     media_files_starting_at,
     media_id_for_path,
+    normalize_modalities,
 )
 
 
@@ -90,3 +94,101 @@ def test_media_files_matching_ids_keeps_manifest_order():
 def test_media_files_matching_ids_rejects_unknown_media_id():
     with pytest.raises(ValueError):
         media_files_matching_ids([Path("v_1.mp4")], ["v_missing"])
+
+
+def test_normalize_modalities_defaults_to_all_supported_modalities():
+    assert normalize_modalities(None) == {"visual", "audio", "asr"}
+
+
+def test_normalize_modalities_accepts_repeated_selected_modalities():
+    assert normalize_modalities(["visual", "asr"]) == {"visual", "asr"}
+
+
+def test_normalize_modalities_rejects_unknown_modality():
+    with pytest.raises(Exception):
+        normalize_modalities(["caption"])
+
+
+class FakeMilvusClient:
+    def __init__(self, indexed: dict[tuple[str, str], bool]):
+        self.indexed = indexed
+
+    def query(self, collection_name, filter, output_fields, limit):
+        media_id = filter.split('"')[1]
+        if self.indexed.get((collection_name, media_id), False):
+            return [{"media_id": media_id}]
+        return []
+
+
+def test_has_indexed_modalities_requires_all_selected_modalities():
+    client = FakeMilvusClient(
+        {
+            ("visual_keyframes", "v_1"): True,
+            ("audio_segments", "v_1"): False,
+        }
+    )
+
+    assert has_indexed_modalities("v_1", {"visual"}, client) is True
+    assert has_indexed_modalities("v_1", {"visual", "audio"}, client) is False
+
+
+def test_media_files_without_indexed_modalities_keeps_only_missing_media():
+    files = [Path("v_1.mp4"), Path("v_2.mp4")]
+    client = FakeMilvusClient(
+        {
+            ("visual_keyframes", "v_1"): True,
+            ("visual_keyframes", "v_2"): False,
+        }
+    )
+
+    assert media_files_without_indexed_modalities(
+        files,
+        media_id_source="filename",
+        modalities={"visual"},
+        milvus_client=client,
+    ) == [Path("v_2.mp4")]
+
+
+@pytest.mark.asyncio
+async def test_ingest_all_passes_modalities_and_keyframe_interval(monkeypatch, tmp_path):
+    calls = []
+
+    async def fake_run_ingestion_pipeline(
+        asset,
+        local_path,
+        modalities=None,
+        keyframe_interval_sec=None,
+    ):
+        calls.append(
+            {
+                "media_id": asset.media_id,
+                "local_path": local_path,
+                "modalities": modalities,
+                "keyframe_interval_sec": keyframe_interval_sec,
+            }
+        )
+
+    monkeypatch.setattr(
+        "services.ingestion.pipeline.run_ingestion_pipeline",
+        fake_run_ingestion_pipeline,
+    )
+    video = tmp_path / "v_123.mp4"
+    video.write_bytes(b"video")
+
+    await _ingest_all(
+        [video],
+        language="en",
+        max_concurrency=1,
+        media_id_source="filename",
+        modalities={"visual"},
+        keyframe_interval_sec=10.0,
+    )
+
+    assert calls == [
+        {
+            "media_id": "v_123",
+            "local_path": video,
+            "modalities": {"visual"},
+            "keyframe_interval_sec": 10.0,
+        }
+    ]

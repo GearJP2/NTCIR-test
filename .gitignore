@@ -23,6 +23,7 @@ model_cache/
 # Local datasets / generated evaluation artifacts
 data/activitynet/
 data/manifests/
+data/evaluation/
 data/inspection/
 
 # Node

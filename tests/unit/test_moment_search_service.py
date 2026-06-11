@@ -170,6 +170,38 @@ async def test_moment_search_service_returns_empty_without_duration(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_moment_search_service_skips_zero_weight_modalities(monkeypatch):
+    fake_milvus = FakeMilvus()
+    monkeypatch.setattr(
+        "services.embedding.visual_encoder.VisualEncoder",
+        lambda: FakeVisualEncoder(),
+    )
+
+    def fail_unused_encoder():
+        raise AssertionError("zero-weight encoder should not be loaded")
+
+    monkeypatch.setattr("services.embedding.text_encoder.TextEncoder", fail_unused_encoder)
+    monkeypatch.setattr("services.embedding.clap_encoder.ClapEncoder", fail_unused_encoder)
+    monkeypatch.setattr(
+        "storage.milvus.client.get_milvus_client",
+        lambda: fake_milvus,
+    )
+
+    response = await MomentSearchService().run(
+        MomentSearchRequest(
+            media_id="v_123",
+            query="woman doing sit ups",
+            top_k=3,
+            duration_sec=30.0,
+            profile="activitynet_visual_only",
+        )
+    )
+
+    assert response.total == 3
+    assert [call["collection_name"] for call in fake_milvus.calls] == ["visual_keyframes"]
+
+
+@pytest.mark.asyncio
 async def test_moment_search_service_continues_when_one_modality_fails(monkeypatch):
     fake_milvus = FakeMilvus()
     monkeypatch.setattr(
