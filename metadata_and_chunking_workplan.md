@@ -16,7 +16,7 @@ references. Retrieval models and final reranking are outside this work package.
 - Timestamped transcripts
 - Heart-rate CSV files
 - Gaze/eye-tracking CSV files
-- Timestamped thermal images
+- Sparse timestamped thermal images, if useful
 
 Personal-device and Narrative Clip photos should remain optional. They should
 not be treated as frames extracted from the primary video.
@@ -54,18 +54,18 @@ Produce one event manifest in JSONL or Parquet:
     "valid_ratio": 0.81
   },
   "thermal": {
-    "image_ids": ["T00341", "T00342"],
-    "image_count": 2,
-    "motion_state": "moderate",
-    "heat_source_probability": 0.08,
-    "valid": true
+    "image_ids": [],
+    "image_count": 0,
+    "nearest_time_delta_ms": null,
+    "valid": false,
+    "note": "optional sparse evidence only"
   },
   "coverage": {
     "video": true,
     "transcript": true,
     "heart_rate": true,
     "gaze": true,
-    "thermal": true
+    "thermal": false
   }
 }
 ```
@@ -86,7 +86,7 @@ Create a synchronization table:
 | transcript | dataset timestamp | documented zone | measured | `timestamp_ms` |
 | heart rate | CSV timestamp | documented zone | measured | `timestamp_ms` |
 | gaze | `TIME`/`TIME_TICK` plus session start | session zone | measured | `timestamp_ms` |
-| thermal | filename/EXIF/manifest timestamp | documented zone | measured | `timestamp_ms` |
+| thermal | filename/EXIF/manifest timestamp, if available | documented zone | measured | `timestamp_ms` |
 
 Do not assume `TIME` in the gaze CSV is an absolute date. It may be elapsed
 recording time and require the recording/session start timestamp.
@@ -142,18 +142,21 @@ Keep raw gaze position and validity so results can be audited.
 
 ### 5.3 Thermal Images
 
-Preserve:
+Thermal should be treated as optional sparse evidence, not a core metadata
+stream. If the dataset only contains about 50 thermal images, it will usually
+be too sparse to support reliable activity classification or event chunking.
+Its best role is as a weak contextual cue for a small number of events.
+
+Preserve, when available:
 
 - Image identifier/path
 - Capture timestamp
 - Participant/session identifier
 - Original thermal values when available
 
-Extract separately:
+Possible exploratory features:
 
 - Human/body presence
-- Posture
-- Motion between nearby thermal images
 - Heat distribution
 - Environmental heat-source evidence
 - Confidence
@@ -163,7 +166,8 @@ represent environmental objects rather than body temperature.
 
 Associate sparse thermal images with events using a documented tolerance. A
 starting value could be the event interval plus or minus 5-10 seconds, but it
-must be validated against the dataset capture process.
+must be validated against the dataset capture process. If coverage is very low,
+report thermal coverage and exclude it from the main system comparison.
 
 ### 5.4 Transcript
 
@@ -211,8 +215,10 @@ B(t) =
 ```
 
 Heart rate should not define precise boundaries because physiological response
-can lag behind visible activity. Gaze and thermal transitions may support a
-boundary, but should initially be metadata rather than primary boundary inputs.
+can lag behind visible activity. Gaze may support interpretation of an event,
+but should initially be metadata rather than a primary boundary input. Thermal
+should not be used for boundary detection unless later inspection shows much
+better coverage than expected.
 
 ### 6.3 Boundary Post-Processing
 
@@ -229,7 +235,7 @@ After final video boundaries are produced:
 
 1. Select heart-rate samples overlapping each event.
 2. Select valid gaze fixations overlapping each event.
-3. Select thermal images inside the interval or tolerance.
+3. Select thermal images inside the interval or tolerance, only as optional evidence.
 4. Attach overlapping transcript spans.
 5. Calculate event-level features and coverage.
 
@@ -251,8 +257,8 @@ processed/
     cleaned_fixations.parquet
     attended_objects.parquet
   thermal/
-    image_manifest.parquet
-    thermal_features.parquet
+    optional_image_manifest.parquet
+    optional_event_links.parquet
   transcript/
     aligned_transcripts.parquet
   chunks/
@@ -288,7 +294,7 @@ Every generated dataset should include a processing-version field.
 - Coverage rates are reported by participant and modality.
 - Missing metadata remains explicitly missing.
 - Validity flags are respected.
-- Thermal-image tolerances are recorded.
+- Thermal-image tolerances and sparse coverage are recorded when thermal is used.
 - Gaze points remain inside valid frame coordinates.
 
 ## 9. Experiments Owned by This Work Package
@@ -317,19 +323,22 @@ Compare downstream retrieval with:
 1. No metadata
 2. Heart rate only
 3. Gaze only
-4. Thermal only
-5. Heart rate + thermal state
-6. All available metadata
+4. Heart rate + gaze
+5. Heart rate + gaze + optional sparse thermal
 
 Report results only for topics/events with valid modality coverage, as well as
 overall results.
+
+Thermal should be reported as an exploratory ablation only. If coverage is too
+low, the honest result is to state that thermal was inspected but not included
+in the main retrieval pipeline.
 
 ## 10. Recommended Order
 
 1. Audit files and timestamp formats.
 2. Build the canonical timeline.
 3. Clean heart-rate and gaze CSV files.
-4. Build the thermal image manifest.
+4. Inspect thermal coverage and decide whether it is worth keeping as optional evidence.
 5. Implement fixed-window chunk baselines.
 6. Implement visual semantic chunking.
 7. Add transcript transitions to chunking.
@@ -347,7 +356,7 @@ To begin implementation, collect a small representative sample containing:
 - Matching transcript file
 - Matching heart-rate CSV
 - Matching gaze CSV with the complete header
-- Matching thermal images and their timestamp source
+- Any matching thermal images and their timestamp source, if available
 
 One short synchronized session is enough to build and test the first end-to-end
 preprocessing prototype.
