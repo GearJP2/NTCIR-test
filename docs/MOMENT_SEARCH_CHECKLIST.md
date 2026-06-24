@@ -4,15 +4,15 @@ This checklist captures the current product/research decisions so another agent 
 
 ## Decisions
 
-- Primary goal: validate the WorldMM-inspired approach as semantic long-video retrieval.
+- Primary goal: validate the temporal grounding component of the WorldMM-inspired retrieval pipeline under a measurable benchmark.
 - Canonical output: Top-10 ranked `Video Moment` results with `media_id`, `start_sec`, `end_sec`, `score`, `thumbnail_sec`, and source-specific `Evidence`.
 - Benchmark path: no LLM reasoning. Return results only.
 - Search scope: single selected video for the first validation flow.
 - Baseline moment unit: 10-second windows with 5-second stride.
 - Visual evidence baseline: sample one keyframe every 2 seconds; aggregate visual score per window with max frame score.
 - Retrieval ranking: per-modality retrieval, normalize hits to `Video Moment`, then late fusion.
-- ActivityNet Captions: the sole quantitative Evaluation Dataset and paper benchmark.
-- CASTLE2024: not part of the benchmark scope because it has no Ground Truth Moments; keep only as a legacy/manual demo path if needed.
+- ActivityNet Captions: controlled quantitative proxy benchmark for temporal grounding.
+- CASTLE2024: downstream lifelog application setting, but not part of tIoU benchmark scope because it has no Ground Truth Moments; keep as manual inspection/demo path if needed.
 - ActivityNet captions must not be indexed. They are only Evaluation Queries and Ground Truth Moments.
 - ASR generated from video audio may be indexed because it is video-derived evidence.
 - Early metric: `Recall@10` with `tIoU >= 0.3`.
@@ -117,13 +117,22 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Added ActivityNet tuning profiles: `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium`.
 - [x] Added `make eval-activitynet-profile-sweep` to run ActivityNet profile comparisons and write aggregate JSON/CSV.
 - [x] ActivityNet dev200 profile sweep completed. `activitynet_visual_only`, `activitynet_visual_asr_light`, `activitynet_visual_asr_medium`, `activitynet_visual_audio_light`, and `activitynet_visual_audio_medium` tied at `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`; `activitynet_visual_heavy` was slightly lower at `mAP@10 = 0.28303499851118896`.
+- [x] Added paper-ready result table generator: `make summarize-activitynet-results`.
+- [x] Added per-query regression report generator: `make compare-activitynet-results`.
+- [x] ActivityNet dev200 `visual_only` vs `visual_heavy` regression report completed: 316 hits for both, 0 lost hits, 0 gained hits, 4 rank regressions, and 2 rank improvements.
+- [x] ActivityNet paper protocol frozen in `docs/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`.
+- [x] `make summarize-activitynet-results` writes CSV, Markdown, LaTeX, and paper finding summary outputs.
+- [x] Paper framing separated in `docs/PAPER_FRAMING.md`: ActivityNet is a controlled proxy benchmark; CASTLE is the downstream lifelog setting; do not claim superiority over prior long-video systems without matching protocols.
+- [x] ActivityNet temporal granularity/cost table generator added: `make summarize-activitynet-temporal-tradeoff`.
+- [x] ActivityNet paper artifact bundle target added: `make build-activitynet-paper-artifacts`.
+- [x] ActivityNet paper artifact consistency check added: `make check-activitynet-paper-artifacts`.
+- [x] Paper artifact manifest added in `docs/PAPER_ARTIFACTS.md`.
 
 ## Current Next Slice
 
 - [ ] Add summary evidence search if/when generated summaries have their own indexed field.
 - [ ] Use `scripts/check_media_index.py` before running manual or benchmark searches against real indexed media.
-- [ ] Promote `activitynet_visual_only` as the current ActivityNet paper baseline unless a later architecture change makes multimodal evidence improve metrics.
-- [ ] Inspect per-query regressions between the best multimodal profile and `activitynet_visual_only`.
+- [ ] Use `activitynet_visual_only` as the current ActivityNet component baseline unless a later architecture change makes multimodal evidence improve metrics.
 - [ ] Decide whether to keep coarse 10-second visual sampling as the prototype baseline before larger runs.
 
 ## Command Cookbook
@@ -136,6 +145,11 @@ make eval-moments MANIFEST=data/manifests/activitynet_dev50.jsonl
 make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_only SUMMARY=data/evaluation/activitynet_dev200_visual_only_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_only_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_only_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_only_report.md
 make eval-moments MANIFEST=data/manifests/activitynet_dev200.jsonl PROFILE=activitynet_visual_heavy SUMMARY=data/evaluation/activitynet_dev200_visual_heavy_summary.json RESULTS=data/evaluation/activitynet_dev200_visual_heavy_results.jsonl QUERY_CSV=data/evaluation/activitynet_dev200_visual_heavy_queries.csv REPORT=data/evaluation/activitynet_dev200_visual_heavy_report.md
 make eval-activitynet-profile-sweep MANIFEST=data/manifests/activitynet_dev200.jsonl
+make build-activitynet-paper-artifacts
+make check-activitynet-paper-artifacts
+make summarize-activitynet-results
+make summarize-activitynet-temporal-tradeoff
+make compare-activitynet-results
 make ingest-activitynet
 make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual"
 make ingest-activitynet MANIFEST=data/manifests/activitynet_dev200_missing_resume.jsonl MODALITIES="visual" KEYFRAME_INTERVAL_SEC=10

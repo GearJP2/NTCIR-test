@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from app.schemas.search import MomentSearchRequest
-from services.moment_search import MomentSearchService
+from app.schemas.search import CollectionMomentSearchRequest, MomentSearchRequest
+from services.moment_search import CollectionMomentSearchService, MomentSearchService
 
 
 class FakeVisualEncoder:
@@ -170,6 +170,36 @@ async def test_moment_search_service_returns_empty_without_duration(monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_moment_search_service_uses_request_window_and_stride(monkeypatch):
+    fake_milvus = FakeMilvus()
+    monkeypatch.setattr(
+        "services.embedding.visual_encoder.VisualEncoder",
+        lambda: FakeVisualEncoder(),
+    )
+    monkeypatch.setattr(
+        "storage.milvus.client.get_milvus_client",
+        lambda: fake_milvus,
+    )
+
+    response = await MomentSearchService().run(
+        MomentSearchRequest(
+            media_id="v_123",
+            query="woman doing sit ups",
+            top_k=3,
+            duration_sec=30.0,
+            window_sec=20.0,
+            stride_sec=10.0,
+            profile="activitynet_visual_only",
+        )
+    )
+
+    assert [moment.moment_id for moment in response.results] == [
+        "v_123:0.000-20.000",
+        "v_123:10.000-30.000",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_moment_search_service_skips_zero_weight_modalities(monkeypatch):
     fake_milvus = FakeMilvus()
     monkeypatch.setattr(
@@ -239,3 +269,51 @@ async def test_moment_search_service_continues_when_one_modality_fails(monkeypat
     }
     assert "visual" not in evidence_sources
     assert {"asr", "audio"}.issubset(evidence_sources)
+
+
+@pytest.mark.asyncio
+async def test_collection_moment_search_uses_manifest_and_global_visual_search(
+    monkeypatch,
+    tmp_path,
+):
+    manifest = tmp_path / "manifest.jsonl"
+    video = tmp_path / "v_123.mp4"
+    video.touch()
+    manifest.write_text(
+        (
+            '{"media_id":"v_123","video_path":"v_123.mp4","duration_sec":30.0,'
+            '"queries":[{"query_id":"q1","query":"woman doing sit ups",'
+            '"ground_truth":{"start_sec":10.0,"end_sec":20.0}}]}\n'
+        ),
+        encoding="utf-8",
+    )
+    fake_milvus = FakeMilvus()
+    monkeypatch.setattr(
+        "services.embedding.visual_encoder.VisualEncoder",
+        lambda: FakeVisualEncoder(),
+    )
+    monkeypatch.setattr(
+        "storage.milvus.client.get_milvus_client",
+        lambda: fake_milvus,
+    )
+
+    response = await CollectionMomentSearchService().run(
+        CollectionMomentSearchRequest(
+            query="woman doing sit ups",
+            top_k=2,
+            manifest_path=str(manifest),
+            candidate_limit=500,
+            profile="activitynet_visual_only",
+        )
+    )
+
+    assert response.media_id == "manifest"
+    assert response.total == 2
+    assert response.results[0].media_id == "v_123"
+    assert response.results[0].rank == 1
+
+    visual_call = fake_milvus.calls[0]
+    assert visual_call["collection_name"] == "visual_keyframes"
+    assert "filter" not in visual_call
+    assert visual_call["limit"] == 500
+    assert visual_call["search_params"]["params"]["ef"] == 500

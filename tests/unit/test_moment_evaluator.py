@@ -74,9 +74,13 @@ async def test_run_moment_evaluation_reports_temporal_metrics(tmp_path):
 
     assert scores["profile"] == "activitynet_visual_heavy"
     assert scores["top_k"] == 10
+    assert scores["window_sec"] == 10.0
+    assert scores["stride_sec"] == 5.0
     assert scores["tiou_threshold"] == 0.3
     assert scores["num_videos"] == 1
     assert scores["num_queries"] == 2
+    assert scores["elapsed_sec"] >= 0.0
+    assert scores["queries_per_sec"] >= 0.0
     assert scores["Recall@10"] == 0.5
     assert scores["mAP@10"] == 0.5
 
@@ -120,6 +124,8 @@ async def test_run_moment_evaluation_writes_summary_and_per_query_results(tmp_pa
     report_text = report_path.read_text(encoding="utf-8")
 
     assert summary["Recall@10"] == 1.0
+    assert summary["elapsed_sec"] >= 0.0
+    assert summary["queries_per_sec"] >= 0.0
     assert len(rows) == 1
     assert rows[0]["hit"] is True
     assert rows[0]["hit_rank"] == 1
@@ -128,6 +134,8 @@ async def test_run_moment_evaluation_writes_summary_and_per_query_results(tmp_pa
     assert "query_id,media_id,hit,hit_rank,best_tiou" in csv_text
     assert "v_123:0,v_123,True,1" in csv_text
     assert "# ActivityNet Moment Search Evaluation" in report_text
+    assert "- Elapsed:" in report_text
+    assert "- Queries/sec:" in report_text
     assert "- Hits: 1" in report_text
 
 

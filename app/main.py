@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.api.v1.endpoints.search import router as search_router
@@ -13,6 +15,7 @@ from storage.milvus.client import get_milvus_client
 from storage.milvus.collections import ensure_all_collections
 
 logger = structlog.get_logger(__name__)
+ACTIVITYNET_MEDIA_DIR = Path("data/activitynet/videos")
 
 
 @asynccontextmanager
@@ -53,6 +56,13 @@ def create_app() -> FastAPI:
     # Convenience alias   →  /api/search/episodic
     # Mirrors the v1 search router at a shorter path for direct client access.
     app.include_router(search_router, prefix="/api/search", tags=["search"])
+
+    if ACTIVITYNET_MEDIA_DIR.exists():
+        app.mount(
+            "/media/activitynet",
+            StaticFiles(directory=ACTIVITYNET_MEDIA_DIR),
+            name="activitynet-media",
+        )
 
     return app
 

@@ -69,10 +69,98 @@ class MomentSearchRequest(BaseModel):
         gt=0.0,
         description="Optional selected-video duration used for fixed-window generation.",
     )
+    window_sec: float = Field(
+        default=10.0,
+        gt=0.0,
+        description="Fixed moment window duration in seconds.",
+    )
+    stride_sec: float = Field(
+        default=5.0,
+        gt=0.0,
+        description="Fixed moment window stride in seconds.",
+    )
     profile: str = Field(
         default="activitynet_visual_heavy",
         description="Evaluation Profile controlling modality weights and matching assumptions.",
     )
+
+
+class CollectionMomentSearchRequest(BaseModel):
+    query: str = Field(
+        ...,
+        min_length=3,
+        max_length=1024,
+        description="Natural-language Semantic Query searched across an evaluation collection.",
+    )
+    top_k: int = Field(default=10, ge=1, le=100)
+    manifest_path: str = Field(
+        default="data/manifests/activitynet_dev200_indexed_current.jsonl",
+        description="ActivityNet-style manifest that defines the searchable collection.",
+    )
+    max_videos: int | None = Field(
+        default=None,
+        ge=1,
+        le=1000,
+        description="Optional cap for interactive debugging; null searches the full manifest.",
+    )
+    candidate_limit: int = Field(
+        default=1000,
+        ge=1,
+        le=5000,
+        description="Per-modality ANN hit count before temporal window aggregation.",
+    )
+    window_sec: float = Field(
+        default=10.0,
+        gt=0.0,
+        description="Fixed moment window duration in seconds.",
+    )
+    stride_sec: float = Field(
+        default=5.0,
+        gt=0.0,
+        description="Fixed moment window stride in seconds.",
+    )
+    profile: str = Field(
+        default="activitynet_visual_only",
+        description="Evaluation Profile controlling modality weights and matching assumptions.",
+    )
+
+
+class GroundTruthInterval(BaseModel):
+    start_sec: float = Field(ge=0.0)
+    end_sec: float = Field(ge=0.0)
+
+
+class EvaluationQueryOption(BaseModel):
+    query_id: str
+    media_id: str
+    query: str
+    duration_sec: float | None = None
+    ground_truth: GroundTruthInterval
+
+
+class EvaluationQueryListResponse(BaseModel):
+    manifest_path: str
+    total: int
+    queries: list[EvaluationQueryOption]
+
+
+class MomentEvaluationRequest(BaseModel):
+    query_id: str = Field(..., min_length=1)
+    manifest_path: str = Field(
+        default="data/manifests/activitynet_dev200_indexed_current.jsonl",
+        description="ActivityNet-style manifest containing the selected query and ground truth.",
+    )
+    top_k: int = Field(default=10, ge=1, le=100)
+    window_sec: float = Field(default=10.0, gt=0.0)
+    stride_sec: float = Field(default=5.0, gt=0.0)
+    profile: str = Field(default="activitynet_visual_only")
+    tiou_threshold: float = Field(default=0.3, ge=0.0, le=1.0)
+
+
+class MomentEvaluationResult(BaseModel):
+    moment: VideoMoment
+    tiou: float = Field(ge=0.0, le=1.0)
+    hit: bool
 
 
 class MomentSearchResponse(BaseModel):
@@ -82,6 +170,18 @@ class MomentSearchResponse(BaseModel):
     profile: str
     results: list[VideoMoment]
     total: int
+
+
+class MomentEvaluationResponse(BaseModel):
+    query_id: str
+    media_id: str
+    query: str
+    ground_truth: GroundTruthInterval
+    tiou_threshold: float
+    hit_rank: int | None = None
+    best_tiou: float
+    search_response: MomentSearchResponse
+    evaluated_results: list[MomentEvaluationResult]
 
 
 # ── Episodic memory search (csat_episodic_memory collection) ─────────────────

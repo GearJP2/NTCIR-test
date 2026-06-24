@@ -1,5 +1,10 @@
 .PHONY: dev worker test lint format ingest eval build \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
+	summarize-activitynet-results compare-activitynet-results \
+	summarize-activitynet-temporal-tradeoff \
+	build-activitynet-paper-artifacts \
+	check-activitynet-paper-artifacts \
+	estimate-activitynet-ablation-costs \
 	check-media-index search-moments inspect-castle
 
 # ── Development ────────────────────────────────────────────────────────────────
@@ -73,6 +78,8 @@ eval-moments:
 	python -m evaluation.moment_evaluator \
 		$(or $(MANIFEST),data/manifests/activitynet_dev50.jsonl) \
 		--profile-name $(or $(PROFILE),activitynet_visual_heavy) \
+		--window-sec $(or $(WINDOW_SEC),10.0) \
+		--stride-sec $(or $(STRIDE_SEC),5.0) \
 		--summary-path $(or $(SUMMARY),data/evaluation/activitynet_dev50_summary.json) \
 		--results-path $(or $(RESULTS),data/evaluation/activitynet_dev50_results.jsonl) \
 		--query-csv-path $(or $(QUERY_CSV),data/evaluation/activitynet_dev50_queries.csv) \
@@ -86,6 +93,50 @@ eval-activitynet-profile-sweep:
 		--output-dir $(or $(OUTPUT_DIR),data/evaluation/profile_sweep) \
 		$(foreach PROFILE_NAME,$(PROFILES),--profile $(PROFILE_NAME)) \
 		$(if $(WRITE_DETAILS),--write-details)
+
+summarize-activitynet-results:
+	python scripts/summarize_evaluation_results.py \
+		$(or $(SUMMARIES),data/evaluation/activitynet_dev200_visual_only_summary.json data/evaluation/activitynet_dev200_visual_heavy_summary.json data/evaluation/activitynet_profile_sweep_summary.json) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_results_table.csv) \
+		--markdown-path $(or $(MARKDOWN),data/evaluation/activitynet_results_table.md) \
+		--latex-path $(or $(LATEX),data/evaluation/activitynet_results_table.tex) \
+		--findings-path $(or $(FINDINGS),data/evaluation/activitynet_findings.md) \
+		--baseline-profile $(or $(BASELINE_PROFILE),activitynet_visual_only)
+
+summarize-activitynet-temporal-tradeoff:
+	python scripts/summarize_activitynet_temporal_tradeoff.py \
+		$(or $(SUMMARIES),data/evaluation/activitynet_dev200_visual_only_summary.json data/evaluation/activitynet_dev200_visual_only_w20_s10_summary.json) \
+		--cost-path $(or $(COSTS),data/evaluation/activitynet_ablation_costs.json) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_temporal_tradeoff.csv) \
+		--markdown-path $(or $(MARKDOWN),data/evaluation/activitynet_temporal_tradeoff.md) \
+		$(if $(LATEX),--latex-path $(LATEX))
+
+compare-activitynet-results:
+	python scripts/compare_moment_results.py \
+		--baseline-results-path $(or $(BASELINE),data/evaluation/activitynet_dev200_visual_only_results.jsonl) \
+		--candidate-results-path $(or $(CANDIDATE),data/evaluation/activitynet_dev200_visual_heavy_results.jsonl) \
+		--csv-path $(or $(CSV),data/evaluation/activitynet_visual_only_vs_heavy_regressions.csv) \
+		--markdown-path $(or $(MARKDOWN),data/evaluation/activitynet_visual_only_vs_heavy_regressions.md) \
+		$(if $(JSON),--json-path $(JSON)) \
+		--limit $(or $(LIMIT),50)
+
+estimate-activitynet-ablation-costs:
+	python scripts/estimate_activitynet_ablation_cost.py \
+		--manifest-path $(or $(MANIFEST),data/manifests/activitynet_dev200.jsonl) \
+		--output-csv $(or $(CSV),data/evaluation/activitynet_ablation_costs.csv) \
+		--output-markdown $(or $(MARKDOWN),data/evaluation/activitynet_ablation_costs.md) \
+		$(if $(JSON),--output-json $(JSON)) \
+		$(foreach SETTING,$(WINDOW_STRIDES),--window-stride $(SETTING)) \
+		$(foreach INTERVAL,$(KEYFRAME_INTERVALS),--keyframe-interval $(INTERVAL))
+
+build-activitynet-paper-artifacts:
+	$(MAKE) estimate-activitynet-ablation-costs JSON=data/evaluation/activitynet_ablation_costs.json
+	$(MAKE) summarize-activitynet-results
+	$(MAKE) summarize-activitynet-temporal-tradeoff LATEX=data/evaluation/activitynet_temporal_tradeoff.tex
+	$(MAKE) check-activitynet-paper-artifacts
+
+check-activitynet-paper-artifacts:
+	python scripts/check_activitynet_paper_artifacts.py
 
 check-media-index:
 	python scripts/check_media_index.py \
