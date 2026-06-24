@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import csv
 import json
+import time
 from pathlib import Path
 from typing import Protocol
 
@@ -29,6 +30,8 @@ async def run_moment_evaluation(
     manifest_path: Path,
     profile_name: str = "activitynet_visual_heavy",
     top_k: int | None = None,
+    window_sec: float = 10.0,
+    stride_sec: float = 5.0,
     searcher: MomentSearcher | None = None,
     summary_path: Path | None = None,
     results_path: Path | None = None,
@@ -46,6 +49,7 @@ async def run_moment_evaluation(
     effective_top_k = top_k or profile.top_k
     service = searcher or MomentSearchService()
 
+    started_at = time.perf_counter()
     results_by_query_id: dict[str, list[RetrievedMoment]] = {}
     query_reports: list[dict] = []
     for query in queries:
@@ -55,6 +59,8 @@ async def run_moment_evaluation(
                 query=query.query,
                 top_k=effective_top_k,
                 duration_sec=duration_by_media_id.get(query.media_id),
+                window_sec=window_sec,
+                stride_sec=stride_sec,
                 profile=profile.name,
             )
         )
@@ -104,12 +110,17 @@ async def run_moment_evaluation(
             }
         )
 
+    elapsed_sec = time.perf_counter() - started_at
     scores = {
         "profile": profile.name,
         "top_k": effective_top_k,
+        "window_sec": window_sec,
+        "stride_sec": stride_sec,
         "tiou_threshold": tiou_threshold,
         "num_videos": len(videos),
         "num_queries": len(queries),
+        "elapsed_sec": elapsed_sec,
+        "queries_per_sec": len(queries) / elapsed_sec if elapsed_sec > 0.0 else 0.0,
         f"Recall@{effective_top_k}": recall_at_k(
             queries,
             results_by_query_id,
@@ -142,6 +153,8 @@ def main(
         help="Evaluation Profile name.",
     ),
     top_k: int | None = typer.Option(None, help="Override profile Top-K."),
+    window_sec: float = typer.Option(10.0, help="Fixed moment window duration in seconds."),
+    stride_sec: float = typer.Option(5.0, help="Fixed moment window stride in seconds."),
     summary_path: Path | None = typer.Option(
         None,
         help="Optional JSON path for aggregate evaluation metrics.",
@@ -164,6 +177,8 @@ def main(
             manifest_path=manifest_path,
             profile_name=profile_name,
             top_k=top_k,
+            window_sec=window_sec,
+            stride_sec=stride_sec,
             summary_path=summary_path,
             results_path=results_path,
             query_csv_path=query_csv_path,
@@ -254,7 +269,11 @@ def _write_markdown_report(path: Path, scores: dict, rows: list[dict]) -> None:
         f"- Videos: {scores['num_videos']}",
         f"- Queries: {scores['num_queries']}",
         f"- Top-K: {scores['top_k']}",
+        f"- Window: {scores['window_sec']}s",
+        f"- Stride: {scores['stride_sec']}s",
         f"- tIoU threshold: {scores['tiou_threshold']}",
+        f"- Elapsed: {_round_metric(scores['elapsed_sec'])}s",
+        f"- Queries/sec: {_round_metric(scores['queries_per_sec'])}",
         f"- {recall_key}: {_round_metric(scores[recall_key])}",
         f"- {map_key}: {_round_metric(scores[map_key])}",
         f"- Hits: {hits}",

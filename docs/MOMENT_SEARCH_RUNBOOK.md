@@ -133,7 +133,53 @@ make eval-moments \
   REPORT=data/evaluation/activitynet_dev200_visual_only_report.md
 ```
 
-The current full dev200 visual-only checkpoint is `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`, `tIoU >= 0.3`, 200 videos, and 693 queries. When running from Codex sandbox, local Docker/Milvus access may require escalated execution; normal shell sessions can run the command directly.
+The current full dev200 visual-only checkpoint is `Recall@10 = 0.455988455988456`, `mAP@10 = 0.283629950296617`, elapsed `153.31829674399887s`, throughput `4.5200084707249735 queries/sec`, `tIoU >= 0.3`, 200 videos, and 693 queries. When running from Codex sandbox, local Docker/Milvus access may require escalated execution; normal shell sessions can run the command directly.
+
+For the dev200 temporal granularity ablation, run a coarser `20s/10s` window:
+
+```bash
+make eval-moments \
+  MANIFEST=data/manifests/activitynet_dev200.jsonl \
+  PROFILE=activitynet_visual_only \
+  WINDOW_SEC=20 \
+  STRIDE_SEC=10 \
+  SUMMARY=data/evaluation/activitynet_dev200_visual_only_w20_s10_summary.json \
+  RESULTS=data/evaluation/activitynet_dev200_visual_only_w20_s10_results.jsonl \
+  QUERY_CSV=data/evaluation/activitynet_dev200_visual_only_w20_s10_queries.csv \
+  REPORT=data/evaluation/activitynet_dev200_visual_only_w20_s10_report.md
+```
+
+The current `20s/10s` checkpoint is `Recall@10 = 0.6594516594516594`, `mAP@10 = 0.42309603976270643`, elapsed `133.52791842399893s`, and throughput `5.18992588351057 queries/sec`. The score is higher than `10s/5s`, but the returned moments are coarser; report window and stride with every temporal result.
+
+Generate the paper-ready quality/cost/runtime table:
+
+```bash
+make summarize-activitynet-temporal-tradeoff \
+  LATEX=data/evaluation/activitynet_temporal_tradeoff.tex
+```
+
+This writes:
+
+- `data/evaluation/activitynet_temporal_tradeoff.csv`
+- `data/evaluation/activitynet_temporal_tradeoff.md`
+- `data/evaluation/activitynet_temporal_tradeoff.tex`
+
+Estimate ablation compute size from the manifest:
+
+```bash
+make estimate-activitynet-ablation-costs \
+  JSON=data/evaluation/activitynet_ablation_costs.json
+```
+
+Current dev200 estimate:
+
+| Type | Setting | Units | Avg/video | Relative cost |
+| --- | --- | ---: | ---: | ---: |
+| moment windows | 10s/5s | 4454 | 22.27 | 1.000x |
+| moment windows | 20s/10s | 2184 | 10.92 | 0.490x |
+| visual keyframes | 2s | 11471 | 57.35 | 1.000x |
+| visual keyframes | 5s | 4653 | 23.27 | 0.406x |
+| visual keyframes | 10s | 2383 | 11.91 | 0.208x |
 
 For the full dev200 multimodal profile after audio/ASR backfill:
 
@@ -181,7 +227,7 @@ Current dev200 sweep result:
 | `activitynet_visual_audio_medium` | 0.455988455988456 | 0.283629950296617 |
 | `activitynet_visual_heavy` | 0.455988455988456 | 0.28303499851118896 |
 
-Use `activitynet_visual_only` as the current paper baseline. The light and medium ASR/audio variants tie visual-only, while the heavy multimodal profile slightly reduces mAP.
+Use `activitynet_visual_only` as the current ActivityNet component baseline. The light and medium ASR/audio variants tie visual-only, while the heavy multimodal profile slightly reduces mAP.
 
 Build a paper-ready result table from existing summary JSON files:
 
@@ -193,6 +239,8 @@ This writes:
 
 - `data/evaluation/activitynet_results_table.csv`
 - `data/evaluation/activitynet_results_table.md`
+- `data/evaluation/activitynet_results_table.tex`
+- `data/evaluation/activitynet_findings.md`
 
 Compare per-query behavior between the current baseline and a candidate profile:
 
@@ -215,7 +263,9 @@ make eval-activitynet-profile-sweep \
 
 ## 4. Paper Scope
 
-ActivityNet Captions is the only quantitative Evaluation Dataset for paper claims because it provides timestamped Ground Truth Moments. CASTLE is not part of the benchmark path because it has no Ground Truth Moments; keep any CASTLE tooling as legacy/manual demo support only.
+ActivityNet Captions is the controlled quantitative benchmark for temporal grounding because it provides timestamped Ground Truth Moments. CASTLE remains the downstream lifelog application setting, but is not part of the tIoU benchmark path because it has no Ground Truth Moments; keep CASTLE tooling as manual inspection/demo support only.
+
+The frozen paper protocol lives in `docs/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`. Use that document as the source of truth for dataset scope, metrics, baseline profile, current ablation results, regression interpretation, and claim boundaries. Use `docs/PAPER_FRAMING.md` and `docs/REPORT_RESULTS_DRAFT.md` for report wording.
 
 ## 5. Known Limits
 
