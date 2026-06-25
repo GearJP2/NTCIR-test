@@ -1,0 +1,2 @@
+{"query_id":"dev10_presentation_001","query":"a presenter standing beside a television explaining a research project","expected_start_ms":450000,"expected_end_ms":510000}
+{"query_id":"dev10_presentation_002","query":"one presenter handing a workshop talk over to another speaker","expected_start_ms":660000,"expected_end_ms":700000}

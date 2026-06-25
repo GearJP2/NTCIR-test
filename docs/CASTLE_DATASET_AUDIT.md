@@ -210,3 +210,63 @@ This three-query check is diagnostic, not a research result. Semantic V2 finds
 well-localized candidates within the top three, but fixed 30-second windows
 currently have better top-1 timestamp precision. More queries and improved
 event ranking are required before claiming a retrieval advantage.
+
+## Transcript-aware semantic chunking diagnostic
+
+The cleaned transcript spans can now contribute an optional contextual
+transition score. Video remains primary: the combined boundary score is the
+visual score plus a weighted transcript score where transcript context exists.
+Missing or unchanged transcript evidence cannot suppress a visual boundary.
+Generated Event Records also include the overlapping transcript text and
+explicit transcript coverage.
+
+On the same 400–700 second interval, V2 with transcript weight `0.25` produced
+six learned boundaries and nine Semantic Micro Events. Against the seven
+approximate manual boundaries at ±10 seconds, it matched the visual-only V2
+radius-2 result:
+
+| Segmenter | Precision | Recall | F1 | Mean error |
+|---|---:|---:|---:|---:|
+| V2 visual only | 0.833 | 0.714 | 0.769 | 6.0 s |
+| V2 visual + transcript | 0.833 | 0.714 | 0.769 | 4.0 s |
+
+The three-query direct-visual retrieval diagnostic improved from Recall@1
+`0.667`, MRR `0.833`, and mean top-1 tIoU `0.449` to Recall@1 `1.000`, MRR
+`1.000`, and mean top-1 tIoU `0.754`. This is development evidence only: the
+query set is too small for a research claim, and transcript quality is uneven.
+
+## Cross-interval transcript-weight sweep
+
+Three additional five-minute intervals were sampled every five seconds:
+
+- recording `08`, 700–1000 seconds: kitchen preparation with several clear
+  sub-activity transitions;
+- recording `09`, 400–700 seconds: continuous breakfast conversation used as
+  a negative boundary control;
+- recording `10`, 400–700 seconds: a workshop presentation with one clear
+  presenter handoff.
+
+Together with the original interval, the development sweep contains four cases,
+14 positive manual boundaries, one negative control, and ten visual queries.
+The references and queries are approximate manual diagnostics, not official
+CASTLE labels.
+
+| Transcript weight | Boundary precision | Boundary recall | Boundary F1 | Mean events | Recall@1 | MRR |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.00 | 0.450 | 0.643 | 0.529 | 8.0 | 0.250 | 0.438 |
+| 0.10 | 0.500 | 0.643 | 0.563 | 7.5 | 0.333 | **0.465** |
+| 0.25 | **0.563** | 0.643 | **0.600** | 7.5 | 0.333 | 0.458 |
+| 0.50 | 0.500 | 0.500 | 0.500 | 7.0 | 0.333 | **0.465** |
+
+Weight `0.25` is the provisional development setting because boundary quality
+is the primary objective of this component. Weight `0.50` is rejected because
+it suppresses valid visual boundaries and lowers recall. The setting is not
+final: the continuous recording `09` control still produces four learned
+boundaries, showing that camera motion and viewpoint changes remain false
+positive sources.
+
+Run the reproducible sweep with:
+
+```bash
+make sweep-transcript-boundary-weights WEIGHTS="0 0.1 0.25 0.5"
+```
