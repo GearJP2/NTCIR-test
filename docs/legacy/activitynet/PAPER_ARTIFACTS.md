@@ -56,10 +56,10 @@ make check-activitynet-paper-artifacts
 
 ## Writing Guides
 
-- `docs/PAPER_FRAMING.md`: Do/Don't claim boundary and reusable report
+- `docs/legacy/activitynet/PAPER_FRAMING.md`: Do/Don't claim boundary and reusable report
   paragraphs.
-- `docs/REPORT_RESULTS_DRAFT.md`: draft experiment/results/discussion text.
-- `docs/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`: source of truth for the frozen
+- `docs/legacy/activitynet/REPORT_RESULTS_DRAFT.md`: draft experiment/results/discussion text.
+- `docs/legacy/activitynet/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`: source of truth for the frozen
   protocol, metric definitions, current numbers, and claim boundary.
 
 ## Current Main Numbers

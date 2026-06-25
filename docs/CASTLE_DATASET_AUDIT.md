@@ -1,0 +1,212 @@
+# CASTLE Dataset Audit
+
+Audit date: June 25, 2026
+Dataset revision: `c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4`
+
+## Repository inventory
+
+The `CASTLE-Dataset/CASTLE2024` Hugging Face repository is public and contains
+49,189 repository entries. After checksum sidecars are excluded, the audit
+found:
+
+| Source | Logical files | Approximate size |
+|---|---:|---:|
+| Main video | 780 | 7,616.25 GiB |
+| Main metadata | 12,738 | 46.70 GiB |
+| Main transcripts | 659 | 0.04 GiB |
+| Auxiliary photos | 10,006 | 2.73 GiB |
+| Auxiliary gaze | 7 | 0.18 GiB |
+| Auxiliary heart rate | 39 | 0.01 GiB |
+| Auxiliary thermal | 39 | 0.01 GiB |
+| Auxiliary video | 16 | 0.68 GiB |
+
+The repository spans four days and 16 recording-source directory names. Five
+names—`Kitchen`, `Living1`, `Living2`, `Meeting`, and `Reading`—represent static
+views rather than participants. Participant identity and camera assignment
+must be confirmed from the dataset documentation before cross-view fusion.
+
+## Timestamp formats observed
+
+| Source | Observed format | Required conversion |
+|---|---|---|
+| Video | Hour-like recording stem, approximately one-hour MP4 | Establish recording start date, timezone, and clock time |
+| Transcript | Recording-relative `[start_sec, end_sec]` | Add recording start timestamp |
+| Main metadata | Clock of day, e.g. `08:05:17.180` | Combine CASTLE day date and timezone |
+| Heart rate | Elapsed time, e.g. `00:00:02.0` | Add participant/day session anchor |
+| Gaze | Session start in `TIME(...)` header plus elapsed `TIME` rows | Parse header start and add elapsed seconds |
+| Thermal | Sequential BMP filename | Requires an external capture-time mapping |
+
+No modality should be converted to the Canonical Timeline until its required
+anchor is documented.
+
+## Representative slice
+
+`day1/Allie` was selected because path-level coverage includes:
+
+- 11 available primary videos and two `.novideo` markers;
+- 11 transcript files;
+- heart rate;
+- gaze;
+- GPS and dense device metadata.
+
+Video durations were obtained through HTTP range requests. No primary videos
+were downloaded.
+
+Results:
+
+- 11 remotely probed recordings;
+- approximately 11.00 hours total;
+- 2,354 transcript chunks;
+- 2,283 structurally valid intervals;
+- 65 reversed intervals;
+- 49 non-monotonic transitions;
+- 33 empty transcript chunks;
+- 10 of 11 transcript files require cleaning or quarantine.
+
+Transcript text may still be useful, but malformed intervals must not enter an
+Event Manifest unchanged.
+
+## Generated baseline artifacts
+
+The local ignored directory `processed/slices/day1_Allie/` contains:
+
+- `recordings.jsonl`: 11 remote recording records;
+- `source_inventory.csv`: paired video, transcript, and metadata paths;
+- `transcript_quality.csv`: interval-quality measurements;
+- `fixed_30s.jsonl`: 1,991 overlapping Fallback Windows;
+- `fixed_120s.jsonl`: 341 non-overlapping Fallback Windows.
+
+## Reproduction
+
+```bash
+make audit-castle
+make build-castle-slice DAY=day1 PARTICIPANT=Allie
+
+make build-castle-fixed-manifest \
+  RECORDINGS=processed/slices/day1_Allie/recordings.jsonl \
+  OUTPUT=processed/slices/day1_Allie/fixed_30s.jsonl \
+  WINDOW=30s \
+  PROCESSING_VERSION=castle-c8e7b5c-day1-allie-v1
+
+make build-castle-fixed-manifest \
+  RECORDINGS=processed/slices/day1_Allie/recordings.jsonl \
+  OUTPUT=processed/slices/day1_Allie/fixed_120s.jsonl \
+  WINDOW=120s \
+  PROCESSING_VERSION=castle-c8e7b5c-day1-allie-v1
+```
+
+## Next decisions
+
+1. Confirm the calendar date and timezone represented by each CASTLE day.
+2. Confirm whether video stems such as `08` mean an exact `08:00` start.
+3. Establish the heart-rate session anchor for each participant/day.
+4. Map gaze sessions to participant/day recordings.
+5. Find a capture-time source for thermal images or exclude thermal from the
+   aligned baseline.
+6. Define deterministic transcript cleaning: reject reversed intervals, remove
+   empty chunks, sort valid spans, and retain an audit trail.
+
+## Development transcript baseline
+
+Recordings `day1/Allie/08`, `09`, and `10` form the first three-hour
+development slice.
+
+- 673 transcript spans accepted;
+- 15 spans rejected with explicit reasons;
+- 2 spans clipped to recording duration;
+- 543 fixed 30-second events, 508 with transcript evidence;
+- 93 fixed 120-second events, 92 with transcript evidence.
+
+The transcript for recording `10` states that the machine-readable QR-code
+clock is the experiment's timing reference. This is a useful alignment clue,
+but the implementation must still verify the QR clock representation and
+timezone from video or dataset documentation before assigning absolute
+timestamps.
+
+## Development visual sampling
+
+The three selected UHD recordings total 40.8 GiB. A full download was tested,
+but the available connection transferred at approximately 2–3 MB/s, implying a
+four-to-five-hour acquisition. The transfer was stopped after approximately
+609 MB of reported transfer progress. Cancellation did not leave a usable
+local video, so future acquisition should run to completion for one recording
+at a time.
+
+For initial validation, HTTP range seeking sampled seven frames per recording
+at ten-minute intervals:
+
+- 21 frames across three recordings;
+- less than 1 MiB of generated JPEG data;
+- visual states include the CASTLE calibration card, driving activity, and
+  indoor group activity;
+- remote timestamp seeking works and is suitable for sparse inspection.
+
+Sparse ten-minute sampling is not sufficient for semantic boundary detection.
+The next visual experiment should use a dense but bounded interval—for example,
+the first 10–15 minutes of one recording sampled every 2–5 seconds—before
+processing all three hours.
+
+## First visual-only semantic chunking baseline
+
+The first five minutes of recording `08` contain only a static CASTLE
+calibration card. This exposed an important detector failure: a percentile-only
+threshold selected zero-valued score plateaus as boundaries. The detector now
+requires both a percentile threshold and an absolute visual-change floor.
+
+A second five-minute interval, from 400 to 700 seconds, was sampled every five
+seconds and encoded directly from video frames with CLIP
+`ViT-B-32-quickgelu`. No captions or transcripts influenced boundary
+selection.
+
+The corrected baseline produced:
+
+- 60 direct visual samples;
+- six learned visual boundaries;
+- four maximum-duration fallback splits;
+- ten Semantic Micro Events between 10 and 60 seconds;
+- one Semantic Macro Event covering the five-minute experiment;
+- one normalized pooled visual embedding per event.
+
+Manual inspection confirmed that strong boundaries include real changes such as
+a kitchen overview changing to cabinet inspection. The detector is also
+sensitive to rapid egocentric camera motion within one activity. It is a valid
+visual-only baseline, not yet the final multimodal semantic segmenter.
+
+## Contextual visual detector and development evaluation
+
+A contextual `V2` detector compares pooled visual embeddings before and after a
+candidate boundary. This suppresses one-frame excursions while retaining
+sustained visual changes. The original adjacent-frame detector remains frozen
+as `V1`.
+
+Seven approximate manual boundaries were annotated for the 400–700 second
+development interval. Descriptions are evaluation-only and are never provided
+to the detector. With a ±10-second matching tolerance:
+
+| Detector | Precision | Recall | F1 | Mean error |
+|---|---:|---:|---:|---:|
+| V1 adjacent | 0.667 | 0.571 | 0.615 | 5.0 s |
+| V2 contextual radius 1 | 0.571 | 0.571 | 0.571 | 6.25 s |
+| V2 contextual radius 2 | 0.833 | 0.714 | **0.769** | 6.0 s |
+| V2 contextual radius 3 | **1.000** | 0.571 | 0.727 | **2.5 s** |
+
+Radius 2 is the current development setting because it has the highest F1. It
+produces nine Semantic Micro Events, six learned boundaries, and two
+maximum-duration splits over the five-minute interval.
+
+## Direct-visual retrieval check
+
+Three small visual queries were evaluated using CLIP text embeddings only at
+query time. Indexed candidates contain pooled direct frame embeddings; no
+caption or transcript embeddings are indexed in this comparison.
+
+| Candidate unit | Recall@1 | Recall@3 | MRR | Mean best tIoU | Mean top-1 tIoU |
+|---|---:|---:|---:|---:|---:|
+| Semantic V2 | 0.667 | **1.000** | **0.833** | **0.594** | 0.449 |
+| Fixed 30 s | 0.667 | 0.667 | 0.667 | 0.565 | **0.565** |
+| Fixed 120 s | 0.667 | **1.000** | **0.833** | 0.453 | 0.300 |
+
+This three-query check is diagnostic, not a research result. Semantic V2 finds
+well-localized candidates within the top three, but fixed 30-second windows
+currently have better top-1 timestamp precision. More queries and improved
+event ranking are required before claiming a retrieval advantage.

@@ -26,7 +26,14 @@ def check_activitynet_paper_artifacts(
     temporal_rows = _read_csv(temporal_tradeoff_csv_path)
 
     errors.extend(_check_profile_table(profile_rows, visual_summary, tolerance))
-    errors.extend(_check_temporal_table(temporal_rows, [visual_summary, coarse_summary], costs, tolerance))
+    errors.extend(
+        _check_temporal_table(
+            temporal_rows,
+            [visual_summary, coarse_summary],
+            costs,
+            tolerance,
+        )
+    )
     errors.extend(_check_text_contains(findings_path, _findings_required_text()))
     errors.extend(_check_text_contains(report_draft_path, _draft_required_text()))
     return errors
@@ -58,7 +65,7 @@ def main(
         help="Generated findings Markdown.",
     ),
     report_draft_path: Path = typer.Option(
-        Path("docs/REPORT_RESULTS_DRAFT.md"),
+        Path("docs/legacy/activitynet/REPORT_RESULTS_DRAFT.md"),
         help="Report results draft Markdown.",
     ),
     tolerance: float = typer.Option(1e-6, help="Float comparison tolerance."),

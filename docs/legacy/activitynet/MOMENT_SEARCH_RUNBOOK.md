@@ -265,7 +265,7 @@ make eval-activitynet-profile-sweep \
 
 ActivityNet Captions is the controlled quantitative benchmark for temporal grounding because it provides timestamped Ground Truth Moments. CASTLE remains the downstream lifelog application setting, but is not part of the tIoU benchmark path because it has no Ground Truth Moments; keep CASTLE tooling as manual inspection/demo support only.
 
-The frozen paper protocol lives in `docs/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`. Use that document as the source of truth for dataset scope, metrics, baseline profile, current ablation results, regression interpretation, and claim boundaries. Use `docs/PAPER_FRAMING.md` and `docs/REPORT_RESULTS_DRAFT.md` for report wording.
+The frozen paper protocol lives in `docs/legacy/activitynet/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`. Use that document as the source of truth for dataset scope, metrics, baseline profile, current ablation results, regression interpretation, and claim boundaries. Use `docs/legacy/activitynet/PAPER_FRAMING.md` and `docs/legacy/activitynet/REPORT_RESULTS_DRAFT.md` for report wording.
 
 ## 5. Known Limits
 

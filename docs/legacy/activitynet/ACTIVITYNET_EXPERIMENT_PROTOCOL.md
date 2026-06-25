@@ -170,9 +170,9 @@ This writes:
 - `data/evaluation/activitynet_results_table.tex`
 - `data/evaluation/activitynet_findings.md`
 
-Use `docs/PAPER_FRAMING.md` for claim wording, `docs/REPORT_RESULTS_DRAFT.md`
+Use `docs/legacy/activitynet/PAPER_FRAMING.md` for claim wording, `docs/legacy/activitynet/REPORT_RESULTS_DRAFT.md`
 for a report-ready experiment/results/discussion draft, and
-`docs/PAPER_ARTIFACTS.md` for the artifact manifest.
+`docs/legacy/activitynet/PAPER_ARTIFACTS.md` for the artifact manifest.
 
 ## Claim Boundary
 
