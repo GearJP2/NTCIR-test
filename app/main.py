@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1.router import api_router
 from app.api.v1.endpoints.search import router as search_router
+from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
@@ -15,7 +15,7 @@ from storage.milvus.client import get_milvus_client
 from storage.milvus.collections import ensure_all_collections
 
 logger = structlog.get_logger(__name__)
-ACTIVITYNET_MEDIA_DIR = Path("data/activitynet/videos")
+CASTLE_MEDIA_DIR = Path("data/castle/videos")
 
 
 @asynccontextmanager
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="NTCIR CSAT Multimodal Search",
+        title="CASTLE Hierarchical Multimodal Event Retrieval",
         version="0.1.0",
         docs_url="/docs" if settings.app_env != "production" else None,
         lifespan=lifespan,
@@ -57,11 +57,11 @@ def create_app() -> FastAPI:
     # Mirrors the v1 search router at a shorter path for direct client access.
     app.include_router(search_router, prefix="/api/search", tags=["search"])
 
-    if ACTIVITYNET_MEDIA_DIR.exists():
+    if CASTLE_MEDIA_DIR.exists():
         app.mount(
-            "/media/activitynet",
-            StaticFiles(directory=ACTIVITYNET_MEDIA_DIR),
-            name="activitynet-media",
+            "/media/castle",
+            StaticFiles(directory=CASTLE_MEDIA_DIR),
+            name="castle-media",
         )
 
     return app

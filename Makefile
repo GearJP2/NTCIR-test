@@ -1,4 +1,14 @@
 .PHONY: dev worker test lint format ingest eval build \
+	audit-castle \
+	build-castle-slice \
+	build-castle-fixed-manifest \
+	enrich-castle-transcripts \
+	download-castle-slice \
+	sample-castle-frames \
+	build-visual-semantic-events \
+	compare-visual-segmenters \
+	evaluate-visual-boundaries \
+	compare-visual-retrieval \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -47,6 +57,86 @@ test-integration:
 ingest:
 	python scripts/ingest_corpus.py --corpus-dir data/sample/
 
+audit-castle:
+	python scripts/audit_castle_dataset.py \
+		--output-dir $(or $(OUTPUT_DIR),processed/audit)
+
+build-castle-slice:
+	python scripts/build_castle_slice.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--output-dir $(or $(OUTPUT_DIR),processed/slices) \
+		$(if $(MAX_RECORDINGS),--max-recordings $(MAX_RECORDINGS))
+
+build-castle-fixed-manifest:
+	python scripts/build_castle_fixed_manifest.py \
+		$(or $(RECORDINGS),processed/timeline/recordings.jsonl) \
+		--output-path $(or $(OUTPUT),processed/chunks/fixed_30s.jsonl) \
+		--window $(or $(WINDOW),30s) \
+		--processing-version $(or $(PROCESSING_VERSION),dev)
+
+enrich-castle-transcripts:
+	python scripts/enrich_castle_transcripts.py \
+		$(or $(INPUT),processed/slices/day1_Allie/fixed_30s.jsonl) \
+		--output-manifest $(or $(OUTPUT),processed/slices/day1_Allie/dev_08_10_fixed_30s_transcript.jsonl) \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		$(foreach STEM,$(STEMS),--recording-stem $(STEM)) \
+		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
+		--cleaned-spans-path $(or $(CLEANED_SPANS),processed/slices/day1_Allie/dev_08_10_cleaned_transcripts.jsonl) \
+		--rejected-spans-path $(or $(REJECTED_SPANS),processed/slices/day1_Allie/dev_08_10_rejected_transcripts.csv)
+
+download-castle-slice:
+	python scripts/download_castle_slice.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		$(foreach STEM,$(STEMS),--recording-stem $(STEM)) \
+		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
+		--output-dir $(or $(OUTPUT_DIR),data/castle)
+
+sample-castle-frames:
+	python scripts/sample_castle_frames.py \
+		$(or $(RECORDINGS),processed/slices/day1_Allie/recordings.jsonl) \
+		$(foreach VIDEO_ID,$(VIDEO_IDS),--video-id $(VIDEO_ID)) \
+		--output-dir $(or $(OUTPUT_DIR),processed/frames) \
+		--interval-sec $(or $(INTERVAL_SEC),600)
+
+build-visual-semantic-events:
+	python scripts/build_visual_semantic_events.py \
+		$(FRAME_DIR) \
+		--video-id $(VIDEO_ID) \
+		--participant-id $(PARTICIPANT) \
+		--video-uri "$(VIDEO_URI)" \
+		--output-manifest $(OUTPUT_MANIFEST) \
+		--output-embeddings $(OUTPUT_EMBEDDINGS) \
+		--output-scores $(OUTPUT_SCORES) \
+		--processing-version $(PROCESSING_VERSION) \
+		--model-name $(or $(MODEL),ViT-B-32-quickgelu) \
+		--pretrained $(or $(PRETRAINED),openai)
+
+compare-visual-segmenters:
+	python scripts/compare_visual_segmenters.py \
+		$(FRAME_DIR) \
+		--output-csv $(OUTPUT_CSV) \
+		--output-json $(OUTPUT_JSON) \
+		--model-name $(or $(MODEL),ViT-B-32-quickgelu) \
+		--pretrained $(or $(PRETRAINED),openai)
+
+evaluate-visual-boundaries:
+	python scripts/evaluate_visual_boundaries.py \
+		$(or $(COMPARISON),processed/semantic/dev_08_400_700_detector_comparison.json) \
+		$(or $(REFERENCE),evaluation/fixtures/castle_dev08_400_700_boundaries.jsonl) \
+		--output-csv $(or $(OUTPUT),processed/semantic/dev_08_400_700_boundary_evaluation.csv)
+
+compare-visual-retrieval:
+	python scripts/compare_visual_retrieval.py \
+		$(or $(FRAME_DIR),processed/frames/dev_08_activity/day1_Allie_08) \
+		$(or $(SEMANTIC_MANIFEST),processed/semantic/dev_08_400_700_v2_events.jsonl) \
+		$(or $(QUERIES),evaluation/fixtures/castle_dev08_visual_queries.jsonl) \
+		--output-results $(or $(RESULTS),processed/semantic/dev_08_400_700_visual_retrieval_results.csv) \
+		--output-summary $(or $(SUMMARY),processed/semantic/dev_08_400_700_visual_retrieval_summary.csv)
+
+# Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:
 	HF_HUB_DISABLE_XET=1 python scripts/ingest_corpus.py \
 		--manifest-path $(or $(MANIFEST),data/manifests/activitynet_dev50.jsonl) \

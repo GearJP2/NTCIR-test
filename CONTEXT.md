@@ -1,81 +1,114 @@
-# NTCIR-test — WorldMM Validation
+# NTCIR-test — CASTLE Semantic Event Retrieval
 
-This repo tests the WorldMM (Dynamic Multimodal Memory Agent) approach against long-form video lifelog data. CASTLE2024 is used to build and explore the pipeline; ActivityNet Captions is used to measure retrieval quality where ground truth exists.
+This repository develops a hierarchical multimodal event-retrieval system for
+long CASTLE2024 lifelog recordings. CASTLE is the only active research corpus.
+ActivityNet code and documents are retained only as legacy implementation
+evidence and must not drive new interfaces or claims.
 
 ## Language
 
-**WorldMM Approach**:
-The dynamic multimodal memory agent design from the WorldMM paper as adapted for this repo: multimodal memory indexing plus retrieval over long video. Benchmark evaluation focuses on ranked Video Moments only, without LLM reasoning.
-_Avoid_: CSAT pipeline, NTCIR submission system
+**CASTLE Recording**:
+A long primary lifelog video and the multimodal sources associated with its
+participant and session.
+_Avoid_: ActivityNet video, benchmark clip
 
-**Development Dataset**:
-CASTLE2024 — the primary lifelog corpus for building and qualitatively testing the memory agent. No ground-truth retrieval labels are available.
-_Avoid_: Benchmark dataset, eval set, test set
+**Canonical Timeline**:
+The documented absolute millisecond timeline onto which video, transcript,
+heart-rate, gaze, and optional thermal evidence are aligned.
+_Avoid_: inferred clock, local modality time
 
-**Evaluation Dataset**:
-ActivityNet Captions — the held-out corpus with annotated timestamp intervals and sentence captions, used to score whether retrieved moments match known events.
-_Avoid_: Training data, CASTLE substitute
+**Event Record**:
+The canonical manifest entry describing one time interval in a CASTLE
+Recording. It owns identifiers, core timestamps, hierarchy, source coverage,
+metadata summaries, confidence, and references to raw evidence.
+_Avoid_: chunk row, retrieval hit
 
-**Curated Query Set**:
-A hand-written set of Semantic Queries used for manual CASTLE2024 inspection through the Search Interface. It guides tuning but is not a benchmark because CASTLE2024 has no Ground Truth Moments.
-_Avoid_: CASTLE benchmark, qrels, labels
+**Core Event Interval**:
+The non-expanded start and end timestamps assigned by fixed-window or semantic
+segmentation. Evaluation and reported timestamps use this interval.
+_Avoid_: context window
 
-**Semantic Query**:
-A natural-language text description of the moment the user wants to find (e.g. "the woman does sit ups").
-_Avoid_: Keyword search, topic ID, qid
+**Retrieval Context**:
+Optional time before and after a Core Event Interval used to preserve evidence
+near event edges. It never changes the reported Core Event Interval.
+_Avoid_: corrected boundary
 
-**Evaluation Query**:
-A Semantic Query derived from one ActivityNet Captions sentence, paired with that sentence's timestamp interval as its single Ground Truth Moment.
-_Avoid_: Topic, prompt, benchmark question
+**Micro Event**:
+A short semantically coherent Event Record, initially constrained to roughly
+5–60 seconds. It may have one Macro Event parent.
+_Avoid_: clip, segment
 
-**Indexable Video Evidence**:
-The video-derived material that may be indexed for retrieval, such as frames, audio, ASR output generated from audio, or model-derived summaries. ActivityNet Captions annotations are not Indexable Video Evidence because they are reserved for Evaluation Queries and Ground Truth Moments. Each item of evidence should preserve its source type, such as visual, audio, ASR, or generated summary.
-_Avoid_: Ground truth captions, labels, answer text
+**Macro Event**:
+A broader Event Record grouping related Micro Events over up to several
+minutes.
+_Avoid_: session, arbitrary long window
 
-**Retrieval**:
-A single ranked Video Moment returned by search, paired with a relevance score.
-_Avoid_: Hit, chunk, segment
+**Fallback Window**:
+A fixed-duration overlapping Event Record retained as a recall channel when
+semantic segmentation fails. Initial baselines are 30-second overlapping and
+120-second non-overlapping windows.
+_Avoid_: semantic event
 
-**Search Result Set**:
-The ranked list of retrieved video moments returned for one Semantic Query, normally limited to the top 10 results.
-_Avoid_: Search output, result batch, hits list
+**Semantic Event**:
+A Micro Event or Macro Event created from documented visual and optional
+transcript transition signals, with duration post-processing and a boundary
+confidence score.
+_Avoid_: fixed window
 
-**Video Moment**:
-A contiguous time interval within a video, identified by media ID, start timestamp, and end timestamp. This is the canonical output unit of the Search Interface and the unit compared against ActivityNet Captions annotations.
-_Avoid_: Audio chunk, keyframe, clip, segment
+**Aligned Evidence**:
+Transcript spans, heart-rate samples, valid gaze fixations, attended objects,
+and optional thermal images associated with an Event Record through the
+Canonical Timeline.
+_Avoid_: silently interpolated metadata
 
-**Evidence**:
-The source-specific support behind a Video Moment score, such as a visual keyframe match, audio embedding match, ASR transcript match, or generated-summary match.
-_Avoid_: Debug data, raw hit
+**Coverage**:
+Explicit per-modality availability for an Event Record. Missing evidence stays
+missing and is never represented by fabricated default measurements.
+_Avoid_: completeness score
 
-**Moment Search Response**:
-The canonical search API response: one selected media ID, one Semantic Query, and a ranked Search Result Set of Video Moments with scores, thumbnail timestamps, and Evidence.
-_Avoid_: Episodic search response, ranked hits
+**Event Manifest**:
+A versioned JSONL or Parquet collection of validated Event Records. It is the
+handoff between dataset preparation, indexing, retrieval, and evaluation.
+_Avoid_: ActivityNet evaluation manifest
 
-**Ground Truth Moment**:
-An annotated ActivityNet Captions time interval and caption pair used as the expected answer for retrieval evaluation.
-_Avoid_: Label, benchmark row, answer key
+**Direct Video Evidence**:
+Video-derived embeddings for an Event Record, Micro Event, Macro Event,
+Fallback Window, or keyframe. It is indexed separately from textual evidence.
+_Avoid_: caption vector
 
-**Temporal Match**:
-A retrieved Video Moment is considered correct when its temporal intersection-over-union with a Ground Truth Moment meets the chosen threshold. Early validation uses tIoU >= 0.3.
-_Avoid_: Exact timestamp match, segment ID match
+**Auxiliary Evidence**:
+Transcript, OCR, gaze-grounded objects, heart-rate state, and optional sparse
+thermal information aligned to an Event Record.
+_Avoid_: primary boundary signal
 
-**Recall@10**:
-The early validation metric: whether at least one of the top 10 retrieved Video Moments temporally matches the Ground Truth Moment for a Semantic Query.
-_Avoid_: Accuracy, success rate
+**Candidate Event**:
+An Event Record returned by one retrieval channel before fusion, neighbour
+expansion, or temporal refinement.
+_Avoid_: final answer
 
-**Evaluation Profile**:
-A named evaluation setting that defines dataset-specific retrieval assumptions, especially modality weights and matching thresholds. ActivityNet validation should use a visual-heavy profile, while CASTLE qualitative testing may use a more balanced lifelog profile.
-_Avoid_: Config preset, experiment mode
+**Ranked Event Result**:
+A CASTLE Recording identifier, Core Event Interval, score, and source-specific
+evidence returned for a topic query.
+_Avoid_: ActivityNet Video Moment
 
-**Evaluation Manifest**:
-A reproducible file that lists the videos selected for evaluation, their local media paths, durations, and Evaluation Queries with Ground Truth Moments.
-_Avoid_: Dataset dump, annotation file, loader cache
+**Topic Query**:
+A natural-language CASTLE task description decomposed into requested objects,
+actions, people, scenes, speech clues, attention, physiological state, and
+temporal order.
+_Avoid_: ActivityNet caption query
 
-**Search Interface**:
-The web experience where a user selects and watches one video, enters a Semantic Query, and receives ranked timestamped moments with scores for that selected video.
-_Avoid_: Demo page, dashboard, UI
+## Active Research Rules
 
-**Search Scope**:
-The set of video moments eligible to be returned for a Semantic Query. For the first validation flow, this is expected to be moments within the currently selected long video.
-_Avoid_: Corpus filter, media filter, dataset slice
+- Video determines event boundaries initially; metadata follows those
+  boundaries.
+- Heart rate, gaze, and thermal evidence do not create precise event boundaries
+  in the baseline system.
+- Thermal evidence is optional and confidence-weighted because coverage may be
+  sparse.
+- Fixed windows remain reproducible baselines and a fallback retrieval channel.
+- Direct video, caption, transcript, keyframe/OCR, gaze, and physiological
+  evidence remain separate representations until fusion.
+- Every generated Event Manifest includes a processing version.
+- Quantitative claims require an explicit CASTLE task protocol, labels, or
+  official evaluation output. Do not reuse ActivityNet metrics as CASTLE
+  evidence.

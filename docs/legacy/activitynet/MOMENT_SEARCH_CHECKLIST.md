@@ -120,13 +120,13 @@ This checklist captures the current product/research decisions so another agent 
 - [x] Added paper-ready result table generator: `make summarize-activitynet-results`.
 - [x] Added per-query regression report generator: `make compare-activitynet-results`.
 - [x] ActivityNet dev200 `visual_only` vs `visual_heavy` regression report completed: 316 hits for both, 0 lost hits, 0 gained hits, 4 rank regressions, and 2 rank improvements.
-- [x] ActivityNet paper protocol frozen in `docs/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`.
+- [x] ActivityNet paper protocol frozen in `docs/legacy/activitynet/ACTIVITYNET_EXPERIMENT_PROTOCOL.md`.
 - [x] `make summarize-activitynet-results` writes CSV, Markdown, LaTeX, and paper finding summary outputs.
-- [x] Paper framing separated in `docs/PAPER_FRAMING.md`: ActivityNet is a controlled proxy benchmark; CASTLE is the downstream lifelog setting; do not claim superiority over prior long-video systems without matching protocols.
+- [x] Paper framing separated in `docs/legacy/activitynet/PAPER_FRAMING.md`: ActivityNet is a controlled proxy benchmark; CASTLE is the downstream lifelog setting; do not claim superiority over prior long-video systems without matching protocols.
 - [x] ActivityNet temporal granularity/cost table generator added: `make summarize-activitynet-temporal-tradeoff`.
 - [x] ActivityNet paper artifact bundle target added: `make build-activitynet-paper-artifacts`.
 - [x] ActivityNet paper artifact consistency check added: `make check-activitynet-paper-artifacts`.
-- [x] Paper artifact manifest added in `docs/PAPER_ARTIFACTS.md`.
+- [x] Paper artifact manifest added in `docs/legacy/activitynet/PAPER_ARTIFACTS.md`.
 
 ## Current Next Slice
 
@@ -212,4 +212,4 @@ python scripts/check_media_index.py \
 
 - Glossary: `CONTEXT.md`
 - ADRs: `docs/adr/`
-- Real-data validation runbook: `docs/MOMENT_SEARCH_RUNBOOK.md`
+- Real-data validation runbook: `docs/legacy/activitynet/MOMENT_SEARCH_RUNBOOK.md`

@@ -1,0 +1,7 @@
+{"video_id":"day1_Allie_08","timestamp_ms":430000,"tolerance_ms":10000,"description":"movement from initial kitchen and shelf inspection into the dining area"}
+{"video_id":"day1_Allie_08","timestamp_ms":450000,"tolerance_ms":10000,"description":"document handling begins at the dining table"}
+{"video_id":"day1_Allie_08","timestamp_ms":545000,"tolerance_ms":10000,"description":"leaves document activity and returns toward kitchen preparation"}
+{"video_id":"day1_Allie_08","timestamp_ms":600000,"tolerance_ms":10000,"description":"moves from kitchen preparation to papers in the living area"}
+{"video_id":"day1_Allie_08","timestamp_ms":620000,"tolerance_ms":10000,"description":"returns from living-area papers to the kitchen"}
+{"video_id":"day1_Allie_08","timestamp_ms":665000,"tolerance_ms":10000,"description":"begins refrigerator inspection"}
+{"video_id":"day1_Allie_08","timestamp_ms":690000,"tolerance_ms":10000,"description":"ends refrigerator inspection and returns to group kitchen activity"}
