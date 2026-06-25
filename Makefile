@@ -9,6 +9,7 @@
 	compare-visual-segmenters \
 	evaluate-visual-boundaries \
 	compare-visual-retrieval \
+	sweep-transcript-boundary-weights \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -112,7 +113,9 @@ build-visual-semantic-events:
 		--output-scores $(OUTPUT_SCORES) \
 		--processing-version $(PROCESSING_VERSION) \
 		--model-name $(or $(MODEL),ViT-B-32-quickgelu) \
-		--pretrained $(or $(PRETRAINED),openai)
+		--pretrained $(or $(PRETRAINED),openai) \
+		$(if $(TRANSCRIPT_SPANS),--transcript-spans $(TRANSCRIPT_SPANS)) \
+		$(if $(TRANSCRIPT_WEIGHT),--transcript-weight $(TRANSCRIPT_WEIGHT))
 
 compare-visual-segmenters:
 	python scripts/compare_visual_segmenters.py \
@@ -135,6 +138,14 @@ compare-visual-retrieval:
 		$(or $(QUERIES),evaluation/fixtures/castle_dev08_visual_queries.jsonl) \
 		--output-results $(or $(RESULTS),processed/semantic/dev_08_400_700_visual_retrieval_results.csv) \
 		--output-summary $(or $(SUMMARY),processed/semantic/dev_08_400_700_visual_retrieval_summary.csv)
+
+sweep-transcript-boundary-weights:
+	python scripts/sweep_transcript_boundary_weights.py \
+		$(or $(CASES),evaluation/fixtures/castle_transcript_weight_cases.jsonl) \
+		--transcript-spans $(or $(TRANSCRIPT_SPANS),processed/slices/day1_Allie/dev_08_10_cleaned_transcripts.jsonl) \
+		--output-csv $(or $(OUTPUT),processed/semantic/transcript_weight_sweep.csv) \
+		--output-summary $(or $(SUMMARY),processed/semantic/transcript_weight_sweep_summary.csv) \
+		$(foreach WEIGHT,$(WEIGHTS),--weight $(WEIGHT))
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:

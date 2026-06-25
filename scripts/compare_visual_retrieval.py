@@ -45,8 +45,13 @@ def main(
         for record in load_event_manifest(semantic_manifest)
         if record.event_kind.value == "semantic_micro"
     ]
+    semantic_label = (
+        "semantic_visual_text"
+        if any(record.coverage.transcript for record in semantic_records)
+        else "semantic_v2"
+    )
     interval_sets = {
-        "semantic_v2": [
+        semantic_label: [
             (record.event_id, record.start_ms, record.end_ms)
             for record in semantic_records
         ],

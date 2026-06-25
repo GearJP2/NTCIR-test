@@ -1,0 +1,2 @@
+{"query_id":"dev09_breakfast_001","query":"a group sitting around a dining table eating breakfast","expected_start_ms":400000,"expected_end_ms":460000}
+{"query_id":"dev09_breakfast_002","query":"people talking while eating a meal at a crowded table","expected_start_ms":600000,"expected_end_ms":660000}

@@ -1,0 +1,3 @@
+{"query_id":"dev08_later_001","query":"someone closely inspecting ingredients and food near the pantry","expected_start_ms":900000,"expected_end_ms":935000}
+{"query_id":"dev08_later_002","query":"someone opening or inspecting a tall kitchen appliance and cabinets","expected_start_ms":800000,"expected_end_ms":825000}
+{"query_id":"dev08_later_003","query":"a group preparing breakfast around a crowded kitchen island","expected_start_ms":825000,"expected_end_ms":900000}

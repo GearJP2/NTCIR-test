@@ -5,6 +5,7 @@ from typing import Literal
 
 import numpy as np
 
+from services.events.transcript_boundaries import fuse_boundary_scores
 from services.events.visual_boundaries import (
     BoundaryPoint,
     EventInterval,
@@ -52,6 +53,9 @@ class VisualSegmentationSummary:
 class VisualSegmentationResult:
     config: VisualSegmentationConfig
     raw_scores: np.ndarray
+    visual_scores: np.ndarray
+    transcript_scores: np.ndarray | None
+    transcript_available: np.ndarray | None
     scores: np.ndarray
     boundaries: list[BoundaryPoint]
     intervals: list[EventInterval]
@@ -83,12 +87,28 @@ def run_visual_segmentation(
     *,
     start_ms: int,
     end_ms: int,
+    transcript_scores: np.ndarray | None = None,
+    transcript_available: np.ndarray | None = None,
+    transcript_weight: float = 0.0,
 ) -> VisualSegmentationResult:
-    raw_scores = score_visual_boundaries(
+    visual_scores = score_visual_boundaries(
         samples,
         detector=config.detector,
         context_radius=config.context_radius,
     ).scores
+    if transcript_scores is None:
+        raw_scores = visual_scores
+    else:
+        if transcript_available is None:
+            raise ValueError(
+                "transcript_available is required with transcript_scores"
+            )
+        raw_scores = fuse_boundary_scores(
+            visual_scores,
+            transcript_scores,
+            transcript_available,
+            transcript_weight=transcript_weight,
+        )
     scores = smooth_scores(raw_scores, radius=config.smoothing_radius)
     boundaries = select_boundary_points(
         samples,
@@ -120,6 +140,9 @@ def run_visual_segmentation(
     return VisualSegmentationResult(
         config=config,
         raw_scores=raw_scores,
+        visual_scores=visual_scores,
+        transcript_scores=transcript_scores,
+        transcript_available=transcript_available,
         scores=scores,
         boundaries=boundaries,
         intervals=intervals,

@@ -65,46 +65,87 @@ def sample_remote_frames(
     recording: RecordingRecord,
     timestamps: list[float],
     output_dir: Path,
+    *,
+    max_attempts: int = 3,
 ) -> int:
     video_dir = output_dir / recording.video_id
     video_dir.mkdir(parents=True, exist_ok=True)
     written = 0
-    with av.open(recording.video_uri, options={"timeout": "30000000"}) as container:
-        stream = next(stream for stream in container.streams if stream.type == "video")
-        for timestamp_sec in timestamps:
-            seek_offset = int(timestamp_sec / float(stream.time_base))
-            container.seek(seek_offset, stream=stream, backward=True)
-            frame = next(
-                (
-                    frame
-                    for frame in container.decode(stream)
-                    if float(frame.time or 0.0) >= timestamp_sec
-                ),
-                None,
-            )
-            if frame is None:
-                continue
-            image = frame.to_image()
-            if image.width > 640:
-                height = round(image.height * 640 / image.width)
-                image = image.resize((640, height))
-            output_path = video_dir / f"{round(timestamp_sec * 1000):010d}.jpg"
-            image.save(output_path, format="JPEG", quality=85)
-            written += 1
+    failed_timestamps: list[float] = []
+    for timestamp_sec in timestamps:
+        output_path = video_dir / f"{round(timestamp_sec * 1000):010d}.jpg"
+        if output_path.exists():
+            continue
+        frame = _decode_remote_frame(
+            recording.video_uri,
+            timestamp_sec,
+            max_attempts=max_attempts,
+        )
+        if frame is None:
+            failed_timestamps.append(timestamp_sec)
+            continue
+        image = frame.to_image()
+        if image.width > 640:
+            height = round(image.height * 640 / image.width)
+            image = image.resize((640, height))
+        image.save(output_path, format="JPEG", quality=85)
+        written += 1
     metadata_path = video_dir / "samples.json"
+    total_written = len(list(video_dir.glob("*.jpg")))
     metadata_path.write_text(
         json.dumps(
             {
                 "video_id": recording.video_id,
                 "video_uri": recording.video_uri,
                 "timestamps_sec": timestamps,
-                "written": written,
+                "written": total_written,
+                "newly_written": written,
+                "failed_timestamps_sec": failed_timestamps,
             },
             indent=2,
         ),
         encoding="utf-8",
     )
+    if failed_timestamps:
+        raise RuntimeError(
+            f"failed to sample {len(failed_timestamps)} timestamps after "
+            f"{max_attempts} attempts; rerun to resume"
+        )
     return written
+
+
+def _decode_remote_frame(
+    video_uri: str,
+    timestamp_sec: float,
+    *,
+    max_attempts: int,
+):
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least 1")
+    for _ in range(max_attempts):
+        try:
+            with av.open(
+                video_uri,
+                options={"timeout": "30000000"},
+            ) as container:
+                stream = next(
+                    stream
+                    for stream in container.streams
+                    if stream.type == "video"
+                )
+                seek_offset = int(timestamp_sec / float(stream.time_base))
+                container.seek(seek_offset, stream=stream, backward=True)
+                return next(
+                    (
+                        frame
+                        for frame in container.decode(stream)
+                        if float(frame.time or 0.0) >= timestamp_sec
+                    ),
+                    None,
+                )
+        except (av.FFmpegError, OSError):
+            continue
+    return None
 
 
 if __name__ == "__main__":

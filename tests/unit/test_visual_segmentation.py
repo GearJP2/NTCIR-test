@@ -57,3 +57,32 @@ def test_segmentation_run_reports_learned_boundaries_and_forced_splits():
     assert result.summary.event_count == 3
     assert result.summary.min_duration_ms == 10_000
     assert result.summary.max_duration_ms == 60_000
+
+
+def test_segmentation_can_fuse_available_transcript_boundary_scores():
+    samples = [
+        _sample(index * 5_000, [1.0, 0.0])
+        for index in range(5)
+    ]
+
+    result = run_visual_segmentation(
+        samples,
+        VisualSegmentationConfig(
+            name="visual-text-test",
+            detector="v1",
+            smoothing_radius=0,
+            boundary_percentile=80,
+            min_boundary_score=0.1,
+            min_event_ms=5_000,
+            max_event_ms=60_000,
+        ),
+        start_ms=0,
+        end_ms=25_000,
+        transcript_scores=np.array([0.0, 1.0, 0.0, 0.0]),
+        transcript_available=np.array([False, True, False, False]),
+        transcript_weight=0.5,
+    )
+
+    assert np.allclose(result.visual_scores, 0.0)
+    assert result.raw_scores[1] == 0.5
+    assert [boundary.timestamp_ms for boundary in result.boundaries] == [10_000]

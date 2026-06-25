@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 
 import numpy as np
@@ -8,7 +9,15 @@ import typer
 from PIL import Image
 
 from app.schemas.event import EventKind, EventRecord, ModalityCoverage
+from services.dataset.castle_transcripts import (
+    TranscriptSpan,
+    attach_transcripts_to_events,
+)
 from services.events.manifest import write_event_manifest
+from services.events.transcript_boundaries import (
+    contextual_transcript_distances,
+    transcript_text_bins,
+)
 from services.events.visual_boundaries import (
     VisualSample,
     pool_event_embedding,
@@ -19,7 +28,7 @@ from services.events.visual_segmentation import (
 )
 
 app = typer.Typer(
-    help="Build caption-free semantic events from sampled CASTLE video frames."
+    help="Build semantic events from CASTLE frames and optional transcripts."
 )
 
 
@@ -43,18 +52,21 @@ def main(
     smoothing_radius: int = typer.Option(1, min=0),
     min_event_sec: float = typer.Option(10.0, min=1.0),
     max_event_sec: float = typer.Option(60.0, min=1.0),
+    transcript_spans: Path | None = typer.Option(
+        None,
+        exists=True,
+        dir_okay=False,
+        help="Optional cleaned transcript JSONL used as a boundary signal.",
+    ),
+    transcript_weight: float = typer.Option(0.25, min=0.0, max=1.0),
 ) -> None:
     paths = sorted(frame_dir.glob("*.jpg"))
     if len(paths) < 2:
         raise typer.BadParameter("at least two sampled frames are required")
 
     timestamps_ms = [int(path.stem) for path in paths]
-    embeddings = encode_frames(
-        paths,
-        model_name=model_name,
-        pretrained=pretrained,
-        batch_size=batch_size,
-    )
+    model, preprocess, tokenizer = _load_model(model_name, pretrained)
+    embeddings = _encode_images(model, preprocess, paths, batch_size)
     samples = [
         VisualSample(timestamp_ms=timestamp_ms, embedding=embedding)
         for timestamp_ms, embedding in zip(timestamps_ms, embeddings, strict=True)
@@ -62,6 +74,24 @@ def main(
     interval_step_ms = _median_step_ms(timestamps_ms)
     experiment_start_ms = timestamps_ms[0]
     experiment_end_ms = timestamps_ms[-1] + interval_step_ms
+    selected_spans: list[TranscriptSpan] = []
+    transcript_scores = None
+    transcript_available = None
+    if transcript_spans is not None:
+        selected_spans = _load_transcript_spans(transcript_spans, video_id)
+        texts = transcript_text_bins(
+            timestamps_ms,
+            end_ms=experiment_end_ms,
+            spans=selected_spans,
+        )
+        text_embeddings = _encode_texts(model, tokenizer, texts)
+        transcript_boundary_scores = contextual_transcript_distances(
+            text_embeddings,
+            np.asarray([bool(text) for text in texts]),
+            context_radius=context_radius,
+        )
+        transcript_scores = transcript_boundary_scores.scores
+        transcript_available = transcript_boundary_scores.available
     segmentation = run_visual_segmentation(
         samples,
         VisualSegmentationConfig(
@@ -76,10 +106,14 @@ def main(
         ),
         start_ms=experiment_start_ms,
         end_ms=experiment_end_ms,
+        transcript_scores=transcript_scores,
+        transcript_available=transcript_available,
+        transcript_weight=transcript_weight,
     )
     intervals = segmentation.intervals
 
-    macro_id = f"{video_id}_M_VISUAL_00001"
+    signal_name = "VISUAL_TEXT" if transcript_spans is not None else "VISUAL"
+    macro_id = f"{video_id}_M_{signal_name}_00001"
     records = [
         EventRecord(
             schema_version="1.0",
@@ -103,7 +137,7 @@ def main(
         macro_id: _normalize(np.mean(embeddings, axis=0))
     }
     for index, interval in enumerate(intervals, start=1):
-        event_id = f"{video_id}_E_VISUAL_{index:05d}"
+        event_id = f"{video_id}_E_{signal_name}_{index:05d}"
         records.append(
             EventRecord(
                 schema_version="1.0",
@@ -134,6 +168,12 @@ def main(
         )
         event_vectors[event_id] = pool_event_embedding(samples, interval)
 
+    if transcript_spans is not None:
+        records = attach_transcripts_to_events(
+            records,
+            {video_id: selected_spans},
+            source_uri_by_video={video_id: str(transcript_spans.resolve())},
+        )
     write_event_manifest(output_manifest, records)
     output_embeddings.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
@@ -146,6 +186,9 @@ def main(
     _write_scores(
         output_scores,
         samples,
+        segmentation.visual_scores,
+        segmentation.transcript_scores,
+        segmentation.transcript_available,
         segmentation.raw_scores,
         segmentation.scores,
         segmentation.boundaries,
@@ -164,15 +207,24 @@ def encode_frames(
     pretrained: str,
     batch_size: int,
 ) -> np.ndarray:
+    model, preprocess, _ = _load_model(model_name, pretrained)
+    return _encode_images(model, preprocess, paths, batch_size)
+
+
+def _load_model(model_name: str, pretrained: str):
     import open_clip
-    import torch
 
     model, _, preprocess = open_clip.create_model_and_transforms(
         model_name,
         pretrained=pretrained,
         cache_dir="model_cache",
     )
-    model = model.to("cpu").eval()
+    return model.to("cpu").eval(), preprocess, open_clip.get_tokenizer(model_name)
+
+
+def _encode_images(model, preprocess, paths: list[Path], batch_size: int) -> np.ndarray:
+    import torch
+
     batches: list[np.ndarray] = []
     for offset in range(0, len(paths), batch_size):
         batch_paths = paths[offset : offset + batch_size]
@@ -184,6 +236,27 @@ def encode_frames(
             features = features / features.norm(dim=-1, keepdim=True)
         batches.append(features.cpu().numpy().astype(np.float32))
     return np.concatenate(batches)
+
+
+def _encode_texts(model, tokenizer, texts: list[str]) -> np.ndarray:
+    import torch
+
+    tokens = tokenizer([text if text else " " for text in texts])
+    with torch.no_grad():
+        features = model.encode_text(tokens)
+        features = features / features.norm(dim=-1, keepdim=True)
+    return features.cpu().numpy().astype(np.float32)
+
+
+def _load_transcript_spans(path: Path, video_id: str) -> list[TranscriptSpan]:
+    spans = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row["video_id"] == video_id:
+            spans.append(TranscriptSpan(**row))
+    return sorted(spans, key=lambda span: (span.start_ms, span.end_ms))
 
 
 def _median_step_ms(timestamps_ms: list[int]) -> int:
@@ -201,7 +274,10 @@ def _normalize(vector: np.ndarray) -> np.ndarray:
 def _write_scores(
     path: Path,
     samples: list[VisualSample],
-    raw_scores: np.ndarray,
+    visual_scores: np.ndarray,
+    transcript_scores: np.ndarray | None,
+    transcript_available: np.ndarray | None,
+    combined_scores: np.ndarray,
     scores: np.ndarray,
     boundaries,
 ) -> None:
@@ -214,7 +290,10 @@ def _write_scores(
             handle,
             fieldnames=[
                 "timestamp_ms",
-                "raw_cosine_distance",
+                "visual_cosine_distance",
+                "transcript_cosine_distance",
+                "transcript_available",
+                "combined_boundary_score",
                 "smoothed_score",
                 "selected_boundary",
             ],
@@ -225,7 +304,18 @@ def _write_scores(
             writer.writerow(
                 {
                     "timestamp_ms": timestamp_ms,
-                    "raw_cosine_distance": float(raw_scores[index]),
+                    "visual_cosine_distance": float(visual_scores[index]),
+                    "transcript_cosine_distance": (
+                        float(transcript_scores[index])
+                        if transcript_scores is not None
+                        else ""
+                    ),
+                    "transcript_available": (
+                        bool(transcript_available[index])
+                        if transcript_available is not None
+                        else False
+                    ),
+                    "combined_boundary_score": float(combined_scores[index]),
                     "smoothed_score": float(score),
                     "selected_boundary": timestamp_ms in boundary_by_timestamp,
                 }

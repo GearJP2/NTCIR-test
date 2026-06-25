@@ -92,3 +92,30 @@ Run the current Phase 0 workflow:
 make audit-castle
 make build-castle-slice DAY=day1 PARTICIPANT=Allie
 ```
+
+The semantic-event builder accepts cleaned transcript spans as an optional
+boundary signal while retaining video as the primary signal:
+
+```bash
+make build-visual-semantic-events \
+  FRAME_DIR=processed/frames/dev_08_activity/day1_Allie_08 \
+  VIDEO_ID=day1_Allie_08 \
+  PARTICIPANT=Allie \
+  VIDEO_URI="..." \
+  OUTPUT_MANIFEST=processed/semantic/dev_08_visual_text_events.jsonl \
+  OUTPUT_EMBEDDINGS=processed/semantic/dev_08_visual_text_embeddings.npz \
+  OUTPUT_SCORES=processed/semantic/dev_08_visual_text_scores.csv \
+  PROCESSING_VERSION=dev \
+  TRANSCRIPT_SPANS=processed/slices/day1_Allie/dev_08_10_cleaned_transcripts.jsonl \
+  TRANSCRIPT_WEIGHT=0.25
+```
+
+Run the four-case development sweep:
+
+```bash
+make sweep-transcript-boundary-weights WEIGHTS="0 0.1 0.25 0.5"
+```
+
+The current provisional transcript weight is `0.25`. It improves aggregate
+manual boundary F1, but the segmenter still over-segments a continuous-activity
+control interval, so this is not a frozen final configuration.
