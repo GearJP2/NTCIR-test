@@ -153,3 +153,12 @@ make build-castle-gaze-alignment-diagnostics
 This writes stream-level gaze quality stats and candidate clock-overlap checks
 under `processed/timeline/day1_Allie/`. Gaze remains diagnostic-only until a
 participant/day recording anchor is demonstrated rather than assumed.
+
+Inventory thermal provenance without downloading image payloads:
+
+```bash
+make build-castle-thermal-inventory
+```
+
+This writes `processed/timeline/thermal_inventory.csv` and records whether
+thermal BMP paths expose participant, day, or timestamp evidence.

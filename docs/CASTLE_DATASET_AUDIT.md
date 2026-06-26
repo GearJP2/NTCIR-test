@@ -358,3 +358,21 @@ Neither candidate clock interpretation overlaps the `08`, `09`, or `10`
 recording clock windows. That is evidence against attaching gaze summaries to
 Event Records in the development slice without an additional participant/day
 session mapping source.
+
+## Development thermal provenance inventory
+
+Thermal evidence is also excluded from Event Records until it can be assigned
+to participant/day recording intervals. The lightweight repository-metadata
+inventory is:
+
+```bash
+make build-castle-thermal-inventory
+```
+
+It writes `processed/timeline/thermal_inventory.csv` without downloading image
+payloads. The diagnostic records each thermal BMP path, file size, any sequence
+number inferred from the filename, and whether the path exposes day,
+participant, or timestamp evidence. Current CASTLE audit findings indicate the
+thermal paths are flat sequential BMP filenames, so they remain unassigned and
+should not be attached to Event Records without an external capture manifest or
+image-level timestamp evidence.
