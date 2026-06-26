@@ -302,3 +302,33 @@ times: recording `08` begins about five minutes after 08:00 according to the
 metadata clock stream. Until the calendar date and timezone are confirmed,
 Event Records should continue to report recording-relative core intervals and
 store clock metadata as an unresolved alignment source.
+
+## Development heart-rate enrichment
+
+Heart-rate summaries can now be attached to Event Records with the timeline
+inventory:
+
+```bash
+make enrich-castle-heart-rate \
+  INPUT=processed/semantic/dev_08_400_700_visual_text_events.jsonl \
+  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl \
+  SUMMARY=processed/semantic/dev_08_400_700_visual_text_hr_summary.csv
+```
+
+The enrichment maps each event interval as:
+
+1. recording-relative `start_ms`/`end_ms`;
+2. plus the recording's first metadata clock offset from
+   `source_timeline_inventory.csv`;
+3. onto `auxiliary/heartrate/Allie/day1.csv` elapsed `HH:MM:SS.s` samples.
+
+Attached summaries include mean/min/max/std BPM, linear BPM slope, baseline
+delta against the participant/day median BPM, and valid-sample ratio. Samples
+outside `30..220` BPM or below the configured confidence threshold are excluded
+from statistics but still count toward valid-sample coverage.
+The generated QA CSV records the mapped clock interval and sample counts for
+each event so alignment and coverage can be inspected without parsing JSONL.
+
+This is intentionally narrower than full multimodal alignment: it provides a
+clock-of-day heart-rate join for development events, while calendar date,
+timezone, and gaze-session mapping remain unresolved.

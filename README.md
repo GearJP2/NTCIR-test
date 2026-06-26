@@ -128,3 +128,18 @@ make build-castle-timeline-inventory STEMS="08 09 10"
 
 This writes `processed/timeline/day1_Allie/source_timeline_inventory.csv` and
 captures current clock, heart-rate, and gaze anchor status.
+
+Attach provisional heart-rate summaries to an Event Manifest:
+
+```bash
+make enrich-castle-heart-rate \
+  INPUT=processed/semantic/dev_08_400_700_visual_text_events.jsonl \
+  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl \
+  SUMMARY=processed/semantic/dev_08_400_700_visual_text_hr_summary.csv
+```
+
+This uses recording metadata clock offsets from the timeline inventory to map
+recording-relative Event Records onto the heart-rate CSV's elapsed day clock.
+The summary CSV records mapped clock intervals, overlapping sample counts,
+valid sample counts, and BPM statistics. It does not resolve absolute calendar
+date, timezone, or gaze-session alignment.
