@@ -11,6 +11,7 @@
 	compare-visual-retrieval \
 	sweep-transcript-boundary-weights \
 	build-castle-timeline-inventory \
+	enrich-castle-heart-rate \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -156,6 +157,15 @@ build-castle-timeline-inventory:
 		--metadata-sensor $(or $(SENSOR),ACCL) \
 		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
 		--output-json $(or $(JSON),processed/timeline/day1_Allie/source_timeline_inventory.json)
+
+enrich-castle-heart-rate:
+	python scripts/enrich_castle_heart_rate.py \
+		$(or $(INPUT),processed/semantic/dev_08_400_700_visual_text_events.jsonl) \
+		--output-manifest $(or $(OUTPUT),processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl) \
+		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--min-confidence $(or $(MIN_CONFIDENCE),1.0)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:
