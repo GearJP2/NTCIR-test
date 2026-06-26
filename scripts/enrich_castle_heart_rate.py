@@ -53,7 +53,12 @@ def main(
     ]
     recording_starts = load_recording_clock_starts(timeline_inventory)
     heart_sources = load_heart_rate_sources(timeline_inventory)
-    source = heart_sources[(day, participant_id)]
+    source = heart_sources.get((day, participant_id))
+    if source is None:
+        raise typer.BadParameter(
+            f"timeline inventory has no heart-rate source for "
+            f"{participant_id}/{day}: {timeline_inventory}"
+        )
     samples = load_heart_rate_samples(source.path)
     enriched = attach_heart_rate_to_events(
         events,
