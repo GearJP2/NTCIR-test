@@ -190,3 +190,11 @@ make check-castle-manifest-modality-readiness \
 
 This fails if Event Records attach a modality that the readiness report still
 marks blocked.
+
+Build a compact reviewer-facing auxiliary report:
+
+```bash
+make build-castle-auxiliary-report
+```
+
+This emits Markdown and JSON summaries under `processed/timeline/day1_Allie/`.

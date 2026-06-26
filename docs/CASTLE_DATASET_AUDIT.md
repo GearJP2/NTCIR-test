@@ -420,3 +420,14 @@ The check writes `modality_readiness_violations.csv` and exits non-zero if any
 EventRecord has `coverage.heart_rate`, `coverage.gaze`, or `coverage.thermal`
 enabled while that participant/day/modality is blocked or missing from the
 readiness report.
+
+A compact report can be generated for review:
+
+```bash
+make build-castle-auxiliary-report
+```
+
+It writes `auxiliary_diagnostics_report.md` and
+`auxiliary_diagnostics_report.json`, summarising the readiness decisions, gaze
+stream statistics, candidate overlap counts, thermal assignment counts, and
+manifest guard violations.

@@ -17,6 +17,7 @@
 	build-castle-modality-readiness \
 	build-castle-auxiliary-diagnostics \
 	check-castle-manifest-modality-readiness \
+	build-castle-auxiliary-report \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -203,11 +204,25 @@ check-castle-manifest-modality-readiness:
 		--modality-readiness $(or $(READINESS),processed/timeline/day1_Allie/modality_readiness.csv) \
 		--output-violations $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness_violations.csv)
 
+build-castle-auxiliary-report:
+	python scripts/build_castle_auxiliary_report.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--readiness-csv $(or $(READINESS),processed/timeline/day1_Allie/modality_readiness.csv) \
+		--gaze-streams-csv $(or $(GAZE_STREAMS),processed/timeline/day1_Allie/gaze_stream_summary.csv) \
+		--gaze-alignment-csv $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
+		--thermal-inventory-csv $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
+		--manifest-violations-csv $(or $(VIOLATIONS),processed/timeline/day1_Allie/modality_readiness_violations.csv) \
+		--output-markdown $(or $(REPORT_MD),processed/timeline/day1_Allie/auxiliary_diagnostics_report.md) \
+		--output-json $(or $(REPORT_JSON),processed/timeline/day1_Allie/auxiliary_diagnostics_report.json)
+
 build-castle-auxiliary-diagnostics:
 	$(MAKE) build-castle-timeline-inventory DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) STEMS="$(or $(STEMS),08 09 10)"
 	$(MAKE) build-castle-gaze-alignment-diagnostics DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) $(if $(GAZE_CSV),GAZE_CSV=$(GAZE_CSV))
 	$(MAKE) build-castle-thermal-inventory
 	$(MAKE) build-castle-modality-readiness DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie)
+	$(MAKE) check-castle-manifest-modality-readiness
+	$(MAKE) build-castle-auxiliary-report DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:
