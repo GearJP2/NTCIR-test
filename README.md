@@ -143,3 +143,58 @@ recording-relative Event Records onto the heart-rate CSV's elapsed day clock.
 The summary CSV records mapped clock intervals, overlapping sample counts,
 valid sample counts, and BPM statistics. It does not resolve absolute calendar
 date, timezone, or gaze-session alignment.
+
+Build gaze alignment diagnostics before attaching gaze to Event Records:
+
+```bash
+make build-castle-gaze-alignment-diagnostics
+```
+
+This writes stream-level gaze quality stats and candidate clock-overlap checks
+under `processed/timeline/day1_Allie/`. Gaze remains diagnostic-only until a
+participant/day recording anchor is demonstrated rather than assumed.
+
+Inventory thermal provenance without downloading image payloads:
+
+```bash
+make build-castle-thermal-inventory
+```
+
+This writes `processed/timeline/thermal_inventory.csv` and records whether
+thermal BMP paths expose participant, day, or timestamp evidence.
+
+Summarize auxiliary modality readiness for Event Records:
+
+```bash
+make build-castle-modality-readiness
+```
+
+For the current development slice, heart-rate is attachable with documented
+clock caveats; gaze and thermal remain blocked until their anchors are proven.
+
+Run the full auxiliary diagnostic sequence:
+
+```bash
+make build-castle-auxiliary-diagnostics
+```
+
+This rebuilds the timeline inventory, gaze diagnostics, thermal inventory, and
+final modality readiness report for the default `day1/Allie` development slice.
+
+Check an Event Manifest against the readiness gate:
+
+```bash
+make check-castle-manifest-modality-readiness \
+  MANIFEST=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+```
+
+This fails if Event Records attach a modality that the readiness report still
+marks blocked.
+
+Build a compact reviewer-facing auxiliary report:
+
+```bash
+make build-castle-auxiliary-report
+```
+
+This emits Markdown and JSON summaries under `processed/timeline/day1_Allie/`.

@@ -12,6 +12,12 @@
 	sweep-transcript-boundary-weights \
 	build-castle-timeline-inventory \
 	enrich-castle-heart-rate \
+	build-castle-gaze-alignment-diagnostics \
+	build-castle-thermal-inventory \
+	build-castle-modality-readiness \
+	build-castle-auxiliary-diagnostics \
+	check-castle-manifest-modality-readiness \
+	build-castle-auxiliary-report \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -167,6 +173,56 @@ enrich-castle-heart-rate:
 		--day $(or $(DAY),day1) \
 		--participant-id $(or $(PARTICIPANT),Allie) \
 		--min-confidence $(or $(MIN_CONFIDENCE),1.0)
+
+build-castle-gaze-alignment-diagnostics:
+	python scripts/build_castle_gaze_alignment_diagnostics.py \
+		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		$(if $(GAZE_CSV),--gaze-csv $(GAZE_CSV)) \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
+		--output-streams $(or $(STREAMS),processed/timeline/day1_Allie/gaze_stream_summary.csv) \
+		--output-alignment $(or $(ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv)
+
+build-castle-thermal-inventory:
+	python scripts/build_castle_thermal_inventory.py \
+		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
+		--output-csv $(or $(OUTPUT),processed/timeline/thermal_inventory.csv)
+
+build-castle-modality-readiness:
+	python scripts/build_castle_modality_readiness.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		--gaze-alignment $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
+		--thermal-inventory $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
+		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness.csv)
+
+check-castle-manifest-modality-readiness:
+	python scripts/check_castle_manifest_modality_readiness.py \
+		$(or $(MANIFEST),processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl) \
+		--modality-readiness $(or $(READINESS),processed/timeline/day1_Allie/modality_readiness.csv) \
+		--output-violations $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness_violations.csv)
+
+build-castle-auxiliary-report:
+	python scripts/build_castle_auxiliary_report.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--readiness-csv $(or $(READINESS),processed/timeline/day1_Allie/modality_readiness.csv) \
+		--gaze-streams-csv $(or $(GAZE_STREAMS),processed/timeline/day1_Allie/gaze_stream_summary.csv) \
+		--gaze-alignment-csv $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
+		--thermal-inventory-csv $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
+		--manifest-violations-csv $(or $(VIOLATIONS),processed/timeline/day1_Allie/modality_readiness_violations.csv) \
+		--output-markdown $(or $(REPORT_MD),processed/timeline/day1_Allie/auxiliary_diagnostics_report.md) \
+		--output-json $(or $(REPORT_JSON),processed/timeline/day1_Allie/auxiliary_diagnostics_report.json)
+
+build-castle-auxiliary-diagnostics:
+	$(MAKE) build-castle-timeline-inventory DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) STEMS="$(or $(STEMS),08 09 10)"
+	$(MAKE) build-castle-gaze-alignment-diagnostics DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) $(if $(GAZE_CSV),GAZE_CSV=$(GAZE_CSV))
+	$(MAKE) build-castle-thermal-inventory
+	$(MAKE) build-castle-modality-readiness DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie)
+	$(MAKE) check-castle-manifest-modality-readiness
+	$(MAKE) build-castle-auxiliary-report DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:

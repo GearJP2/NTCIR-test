@@ -332,3 +332,102 @@ each event so alignment and coverage can be inspected without parsing JSONL.
 This is intentionally narrower than full multimodal alignment: it provides a
 clock-of-day heart-rate join for development events, while calendar date,
 timezone, and gaze-session mapping remain unresolved.
+
+## Development gaze alignment diagnostics
+
+Gaze is not yet attached to Event Records. The current diagnostic command is:
+
+```bash
+make build-castle-gaze-alignment-diagnostics
+```
+
+It writes:
+
+- `processed/timeline/day1_Allie/gaze_stream_summary.csv`
+- `processed/timeline/day1_Allie/gaze_alignment_candidates.csv`
+
+For Allie's current gaze file, the stream summary reports one media stream
+(`NewMedia0`) from `0.00000` to `1233.54395` seconds with roughly 65% valid
+fixation rows and no AOI labels. Candidate clock checks compare:
+
+1. the header clock-of-day anchor from `TIME(2024/12/04 16:54:18.272)`;
+2. elapsed seconds treated as a day-clock diagnostic;
+3. recording metadata clock windows from the timeline inventory.
+
+Neither candidate clock interpretation overlaps the `08`, `09`, or `10`
+recording clock windows. That is evidence against attaching gaze summaries to
+Event Records in the development slice without an additional participant/day
+session mapping source.
+
+## Development thermal provenance inventory
+
+Thermal evidence is also excluded from Event Records until it can be assigned
+to participant/day recording intervals. The lightweight repository-metadata
+inventory is:
+
+```bash
+make build-castle-thermal-inventory
+```
+
+It writes `processed/timeline/thermal_inventory.csv` without downloading image
+payloads. The diagnostic records each thermal BMP path, file size, any sequence
+number inferred from the filename, and whether the path exposes day,
+participant, or timestamp evidence. Current CASTLE audit findings indicate the
+thermal paths are flat sequential BMP filenames, so they remain unassigned and
+should not be attached to Event Records without an external capture manifest or
+image-level timestamp evidence.
+
+## Auxiliary modality readiness decision
+
+The current readiness report is built from the timeline inventory, gaze
+alignment diagnostics, and thermal inventory:
+
+```bash
+make build-castle-modality-readiness
+```
+
+It writes `processed/timeline/day1_Allie/modality_readiness.csv`. For the
+development slice:
+
+- `heart_rate` is attachable to Event Records through the documented
+  clock-of-day join and QA summary.
+- `gaze` is blocked because no candidate clock interpretation overlaps the
+  recording windows.
+- `thermal` is blocked because image paths lack participant/day/timestamp
+  assignment.
+
+This report is the gate for future multimodal enrichment: no modality should
+be attached to Event Records unless it has an attachable readiness row and a
+corresponding coverage/QA artifact.
+
+The full auxiliary diagnostic sequence is:
+
+```bash
+make build-castle-auxiliary-diagnostics
+```
+
+It rebuilds the source timeline inventory, gaze alignment diagnostics, thermal
+provenance inventory, and modality readiness report in order.
+
+Event Manifests can be checked against the readiness gate:
+
+```bash
+make check-castle-manifest-modality-readiness \
+  MANIFEST=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+```
+
+The check writes `modality_readiness_violations.csv` and exits non-zero if any
+EventRecord has `coverage.heart_rate`, `coverage.gaze`, or `coverage.thermal`
+enabled while that participant/day/modality is blocked or missing from the
+readiness report.
+
+A compact report can be generated for review:
+
+```bash
+make build-castle-auxiliary-report
+```
+
+It writes `auxiliary_diagnostics_report.md` and
+`auxiliary_diagnostics_report.json`, summarising the readiness decisions, gaze
+stream statistics, candidate overlap counts, thermal assignment counts, and
+manifest guard violations.
