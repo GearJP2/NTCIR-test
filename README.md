@@ -119,3 +119,12 @@ make sweep-transcript-boundary-weights WEIGHTS="0 0.1 0.25 0.5"
 The current provisional transcript weight is `0.25`. It improves aggregate
 manual boundary F1, but the segmenter still over-segments a continuous-activity
 control interval, so this is not a frozen final configuration.
+
+Inspect the development metadata timeline sources:
+
+```bash
+make build-castle-timeline-inventory STEMS="08 09 10"
+```
+
+This writes `processed/timeline/day1_Allie/source_timeline_inventory.csv` and
+captures current clock, heart-rate, and gaze anchor status.
