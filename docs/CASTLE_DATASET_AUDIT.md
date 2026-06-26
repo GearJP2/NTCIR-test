@@ -399,3 +399,12 @@ development slice:
 This report is the gate for future multimodal enrichment: no modality should
 be attached to Event Records unless it has an attachable readiness row and a
 corresponding coverage/QA artifact.
+
+The full auxiliary diagnostic sequence is:
+
+```bash
+make build-castle-auxiliary-diagnostics
+```
+
+It rebuilds the source timeline inventory, gaze alignment diagnostics, thermal
+provenance inventory, and modality readiness report in order.

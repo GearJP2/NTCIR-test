@@ -171,3 +171,12 @@ make build-castle-modality-readiness
 
 For the current development slice, heart-rate is attachable with documented
 clock caveats; gaze and thermal remain blocked until their anchors are proven.
+
+Run the full auxiliary diagnostic sequence:
+
+```bash
+make build-castle-auxiliary-diagnostics
+```
+
+This rebuilds the timeline inventory, gaze diagnostics, thermal inventory, and
+final modality readiness report for the default `day1/Allie` development slice.

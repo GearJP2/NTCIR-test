@@ -15,6 +15,7 @@
 	build-castle-gaze-alignment-diagnostics \
 	build-castle-thermal-inventory \
 	build-castle-modality-readiness \
+	build-castle-auxiliary-diagnostics \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -194,6 +195,12 @@ build-castle-modality-readiness:
 		--gaze-alignment $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
 		--thermal-inventory $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
 		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness.csv)
+
+build-castle-auxiliary-diagnostics:
+	$(MAKE) build-castle-timeline-inventory DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) STEMS="$(or $(STEMS),08 09 10)"
+	$(MAKE) build-castle-gaze-alignment-diagnostics DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) $(if $(GAZE_CSV),GAZE_CSV=$(GAZE_CSV))
+	$(MAKE) build-castle-thermal-inventory
+	$(MAKE) build-castle-modality-readiness DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:
