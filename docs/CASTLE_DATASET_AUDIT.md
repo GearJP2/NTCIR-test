@@ -408,3 +408,15 @@ make build-castle-auxiliary-diagnostics
 
 It rebuilds the source timeline inventory, gaze alignment diagnostics, thermal
 provenance inventory, and modality readiness report in order.
+
+Event Manifests can be checked against the readiness gate:
+
+```bash
+make check-castle-manifest-modality-readiness \
+  MANIFEST=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+```
+
+The check writes `modality_readiness_violations.csv` and exits non-zero if any
+EventRecord has `coverage.heart_rate`, `coverage.gaze`, or `coverage.thermal`
+enabled while that participant/day/modality is blocked or missing from the
+readiness report.

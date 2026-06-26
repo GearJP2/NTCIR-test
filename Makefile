@@ -16,6 +16,7 @@
 	build-castle-thermal-inventory \
 	build-castle-modality-readiness \
 	build-castle-auxiliary-diagnostics \
+	check-castle-manifest-modality-readiness \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -195,6 +196,12 @@ build-castle-modality-readiness:
 		--gaze-alignment $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
 		--thermal-inventory $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
 		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness.csv)
+
+check-castle-manifest-modality-readiness:
+	python scripts/check_castle_manifest_modality_readiness.py \
+		$(or $(MANIFEST),processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl) \
+		--modality-readiness $(or $(READINESS),processed/timeline/day1_Allie/modality_readiness.csv) \
+		--output-violations $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness_violations.csv)
 
 build-castle-auxiliary-diagnostics:
 	$(MAKE) build-castle-timeline-inventory DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) STEMS="$(or $(STEMS),08 09 10)"

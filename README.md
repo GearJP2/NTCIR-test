@@ -180,3 +180,13 @@ make build-castle-auxiliary-diagnostics
 
 This rebuilds the timeline inventory, gaze diagnostics, thermal inventory, and
 final modality readiness report for the default `day1/Allie` development slice.
+
+Check an Event Manifest against the readiness gate:
+
+```bash
+make check-castle-manifest-modality-readiness \
+  MANIFEST=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+```
+
+This fails if Event Records attach a modality that the readiness report still
+marks blocked.
