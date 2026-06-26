@@ -14,6 +14,7 @@
 	enrich-castle-heart-rate \
 	build-castle-gaze-alignment-diagnostics \
 	build-castle-thermal-inventory \
+	build-castle-modality-readiness \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -184,6 +185,15 @@ build-castle-thermal-inventory:
 	python scripts/build_castle_thermal_inventory.py \
 		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
 		--output-csv $(or $(OUTPUT),processed/timeline/thermal_inventory.csv)
+
+build-castle-modality-readiness:
+	python scripts/build_castle_modality_readiness.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		--gaze-alignment $(or $(GAZE_ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv) \
+		--thermal-inventory $(or $(THERMAL_INVENTORY),processed/timeline/thermal_inventory.csv) \
+		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/modality_readiness.csv)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:

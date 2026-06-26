@@ -376,3 +376,26 @@ participant, or timestamp evidence. Current CASTLE audit findings indicate the
 thermal paths are flat sequential BMP filenames, so they remain unassigned and
 should not be attached to Event Records without an external capture manifest or
 image-level timestamp evidence.
+
+## Auxiliary modality readiness decision
+
+The current readiness report is built from the timeline inventory, gaze
+alignment diagnostics, and thermal inventory:
+
+```bash
+make build-castle-modality-readiness
+```
+
+It writes `processed/timeline/day1_Allie/modality_readiness.csv`. For the
+development slice:
+
+- `heart_rate` is attachable to Event Records through the documented
+  clock-of-day join and QA summary.
+- `gaze` is blocked because no candidate clock interpretation overlaps the
+  recording windows.
+- `thermal` is blocked because image paths lack participant/day/timestamp
+  assignment.
+
+This report is the gate for future multimodal enrichment: no modality should
+be attached to Event Records unless it has an attachable readiness row and a
+corresponding coverage/QA artifact.

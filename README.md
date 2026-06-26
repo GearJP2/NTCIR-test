@@ -162,3 +162,12 @@ make build-castle-thermal-inventory
 
 This writes `processed/timeline/thermal_inventory.csv` and records whether
 thermal BMP paths expose participant, day, or timestamp evidence.
+
+Summarize auxiliary modality readiness for Event Records:
+
+```bash
+make build-castle-modality-readiness
+```
+
+For the current development slice, heart-rate is attachable with documented
+clock caveats; gaze and thermal remain blocked until their anchors are proven.
