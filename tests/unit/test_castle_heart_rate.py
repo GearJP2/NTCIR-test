@@ -8,6 +8,8 @@ from services.dataset.castle_heart_rate import (
     load_heart_rate_sources,
     load_recording_clock_starts,
     summarize_heart_rate,
+    summarize_heart_rate_enrichment,
+    write_heart_rate_enrichment_summary,
 )
 
 
@@ -110,3 +112,29 @@ def test_attach_heart_rate_converts_event_relative_time_to_clock_offset():
     assert enriched[0].raw_evidence_uris["heart_rate"] == [
         "auxiliary/heartrate/Allie/day1"
     ]
+
+
+def test_summarize_heart_rate_enrichment_reports_mapping_and_sample_counts(tmp_path):
+    event = event_record()
+    rows = summarize_heart_rate_enrichment(
+        [event],
+        [
+            HeartRateSample(offset_ms=110_000, bpm=60, confidence=3),
+            HeartRateSample(offset_ms=115_000, bpm=250, confidence=3),
+        ],
+        recording_clock_starts_ms={"day1_Allie_08": 100_000},
+    )
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.clock_start_ms == 110_000
+    assert row.clock_end_ms == 120_000
+    assert row.overlapping_samples == 2
+    assert row.valid_samples == 1
+    assert row.mean_bpm == 60
+    assert row.valid_ratio == 0.5
+
+    output = tmp_path / "summary.csv"
+    write_heart_rate_enrichment_summary(output, rows)
+
+    assert "event_id,video_id,event_start_ms" in output.read_text(encoding="utf-8")

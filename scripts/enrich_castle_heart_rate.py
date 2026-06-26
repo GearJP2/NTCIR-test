@@ -9,6 +9,8 @@ from services.dataset.castle_heart_rate import (
     load_heart_rate_samples,
     load_heart_rate_sources,
     load_recording_clock_starts,
+    summarize_heart_rate_enrichment,
+    write_heart_rate_enrichment_summary,
 )
 from services.events.manifest import load_event_manifest, write_event_manifest
 
@@ -38,6 +40,10 @@ def main(
     day: str = typer.Option("day1"),
     participant_id: str = typer.Option("Allie"),
     min_confidence: float = typer.Option(1.0, min=0.0),
+    output_summary: Path | None = typer.Option(
+        None,
+        help="Optional per-event heart-rate enrichment QA CSV.",
+    ),
 ) -> None:
     events = [
         event
@@ -57,10 +63,20 @@ def main(
         min_confidence=min_confidence,
     )
     write_event_manifest(output_manifest, enriched)
+    if output_summary is not None:
+        summary_rows = summarize_heart_rate_enrichment(
+            events,
+            samples,
+            recording_clock_starts_ms=recording_starts,
+            min_confidence=min_confidence,
+        )
+        write_heart_rate_enrichment_summary(output_summary, summary_rows)
     attached = sum(event.heart_rate is not None for event in enriched)
+    summary_message = f"; wrote QA summary to {output_summary}" if output_summary else ""
     typer.echo(
         f"Wrote {len(enriched)} events to {output_manifest}; "
-        f"attached heart-rate summaries to {attached} events."
+        f"attached heart-rate summaries to {attached} events"
+        f"{summary_message}."
     )
 
 

@@ -163,6 +163,7 @@ enrich-castle-heart-rate:
 		$(or $(INPUT),processed/semantic/dev_08_400_700_visual_text_events.jsonl) \
 		--output-manifest $(or $(OUTPUT),processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl) \
 		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		--output-summary $(or $(SUMMARY),processed/semantic/dev_08_400_700_visual_text_hr_summary.csv) \
 		--day $(or $(DAY),day1) \
 		--participant-id $(or $(PARTICIPANT),Allie) \
 		--min-confidence $(or $(MIN_CONFIDENCE),1.0)

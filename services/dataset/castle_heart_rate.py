@@ -24,6 +24,25 @@ class HeartRateSource:
     source_uri: str
 
 
+@dataclass(frozen=True)
+class HeartRateEnrichmentRow:
+    event_id: str
+    video_id: str
+    event_start_ms: int
+    event_end_ms: int
+    clock_start_ms: int | None
+    clock_end_ms: int | None
+    overlapping_samples: int
+    valid_samples: int
+    mean_bpm: float | None
+    min_bpm: float | None
+    max_bpm: float | None
+    std_bpm: float | None
+    slope_bpm_s: float | None
+    baseline_delta: float | None
+    valid_ratio: float
+
+
 def load_heart_rate_samples(path: Path) -> list[HeartRateSample]:
     samples: list[HeartRateSample] = []
     with path.open(newline="", encoding="utf-8", errors="replace") as handle:
@@ -76,6 +95,81 @@ def load_heart_rate_sources(inventory_path: Path) -> dict[tuple[str, str], Heart
                 source_uri=source,
             )
     return sources
+
+
+def summarize_heart_rate_enrichment(
+    events: list[EventRecord],
+    samples: list[HeartRateSample],
+    *,
+    recording_clock_starts_ms: dict[str, int],
+    min_confidence: float = 1.0,
+    min_bpm: float = 30.0,
+    max_bpm: float = 220.0,
+) -> list[HeartRateEnrichmentRow]:
+    baseline = _baseline_bpm(
+        samples,
+        min_confidence=min_confidence,
+        min_bpm=min_bpm,
+        max_bpm=max_bpm,
+    )
+    rows: list[HeartRateEnrichmentRow] = []
+    for event in events:
+        recording_start = recording_clock_starts_ms.get(event.video_id)
+        clock_start: int | None = None
+        clock_end: int | None = None
+        overlapping: list[HeartRateSample] = []
+        valid: list[HeartRateSample] = []
+        summary: HeartRateSummary | None = None
+        if recording_start is not None:
+            clock_start = recording_start + event.start_ms
+            clock_end = recording_start + event.end_ms
+            overlapping = _overlapping_samples(samples, clock_start, clock_end)
+            valid = _valid_samples(
+                overlapping,
+                min_confidence=min_confidence,
+                min_bpm=min_bpm,
+                max_bpm=max_bpm,
+            )
+            summary = _summarize_overlapping_samples(
+                overlapping,
+                valid,
+                baseline_bpm=baseline,
+            )
+        rows.append(
+            HeartRateEnrichmentRow(
+                event_id=event.event_id,
+                video_id=event.video_id,
+                event_start_ms=event.start_ms,
+                event_end_ms=event.end_ms,
+                clock_start_ms=clock_start,
+                clock_end_ms=clock_end,
+                overlapping_samples=len(overlapping),
+                valid_samples=len(valid),
+                mean_bpm=summary.mean_bpm if summary else None,
+                min_bpm=summary.min_bpm if summary else None,
+                max_bpm=summary.max_bpm if summary else None,
+                std_bpm=summary.std_bpm if summary else None,
+                slope_bpm_s=summary.slope_bpm_s if summary else None,
+                baseline_delta=summary.baseline_delta if summary else None,
+                valid_ratio=summary.valid_ratio if summary else 0.0,
+            )
+        )
+    return rows
+
+
+def write_heart_rate_enrichment_summary(
+    path: Path,
+    rows: list[HeartRateEnrichmentRow],
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(HeartRateEnrichmentRow.__dataclass_fields__)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(
+                {field: getattr(row, field) for field in fieldnames}
+            )
 
 
 def attach_heart_rate_to_events(
@@ -137,21 +231,32 @@ def summarize_heart_rate(
     min_bpm: float = 30.0,
     max_bpm: float = 220.0,
 ) -> HeartRateSummary | None:
-    overlapping = [
-        sample for sample in samples if start_ms <= sample.offset_ms < end_ms
-    ]
+    overlapping = _overlapping_samples(samples, start_ms, end_ms)
     if not overlapping:
         return None
 
-    valid = [
-        sample
-        for sample in overlapping
-        if min_confidence <= sample.confidence and min_bpm <= sample.bpm <= max_bpm
-    ]
+    valid = _valid_samples(
+        overlapping,
+        min_confidence=min_confidence,
+        min_bpm=min_bpm,
+        max_bpm=max_bpm,
+    )
+    return _summarize_overlapping_samples(
+        overlapping,
+        valid,
+        baseline_bpm=baseline_bpm,
+    )
+
+
+def _summarize_overlapping_samples(
+    overlapping: list[HeartRateSample],
+    valid: list[HeartRateSample],
+    *,
+    baseline_bpm: float | None,
+) -> HeartRateSummary:
     valid_ratio = len(valid) / len(overlapping)
     if not valid:
         return HeartRateSummary(valid_ratio=valid_ratio)
-
     bpms = [sample.bpm for sample in valid]
     mean_bpm = sum(bpms) / len(bpms)
     return HeartRateSummary(
@@ -163,6 +268,28 @@ def summarize_heart_rate(
         baseline_delta=mean_bpm - baseline_bpm if baseline_bpm is not None else None,
         valid_ratio=valid_ratio,
     )
+
+
+def _overlapping_samples(
+    samples: list[HeartRateSample],
+    start_ms: int,
+    end_ms: int,
+) -> list[HeartRateSample]:
+    return [sample for sample in samples if start_ms <= sample.offset_ms < end_ms]
+
+
+def _valid_samples(
+    samples: list[HeartRateSample],
+    *,
+    min_confidence: float,
+    min_bpm: float,
+    max_bpm: float,
+) -> list[HeartRateSample]:
+    return [
+        sample
+        for sample in samples
+        if min_confidence <= sample.confidence and min_bpm <= sample.bpm <= max_bpm
+    ]
 
 
 def _recording_source_to_video_id(source: str) -> str:

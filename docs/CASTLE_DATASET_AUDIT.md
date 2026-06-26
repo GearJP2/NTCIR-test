@@ -311,7 +311,8 @@ inventory:
 ```bash
 make enrich-castle-heart-rate \
   INPUT=processed/semantic/dev_08_400_700_visual_text_events.jsonl \
-  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl \
+  SUMMARY=processed/semantic/dev_08_400_700_visual_text_hr_summary.csv
 ```
 
 The enrichment maps each event interval as:
@@ -325,6 +326,8 @@ Attached summaries include mean/min/max/std BPM, linear BPM slope, baseline
 delta against the participant/day median BPM, and valid-sample ratio. Samples
 outside `30..220` BPM or below the configured confidence threshold are excluded
 from statistics but still count toward valid-sample coverage.
+The generated QA CSV records the mapped clock interval and sample counts for
+each event so alignment and coverage can be inspected without parsing JSONL.
 
 This is intentionally narrower than full multimodal alignment: it provides a
 clock-of-day heart-rate join for development events, while calendar date,

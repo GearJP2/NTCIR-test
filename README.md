@@ -134,9 +134,12 @@ Attach provisional heart-rate summaries to an Event Manifest:
 ```bash
 make enrich-castle-heart-rate \
   INPUT=processed/semantic/dev_08_400_700_visual_text_events.jsonl \
-  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl
+  OUTPUT=processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl \
+  SUMMARY=processed/semantic/dev_08_400_700_visual_text_hr_summary.csv
 ```
 
 This uses recording metadata clock offsets from the timeline inventory to map
 recording-relative Event Records onto the heart-rate CSV's elapsed day clock.
-It does not resolve absolute calendar date, timezone, or gaze-session alignment.
+The summary CSV records mapped clock intervals, overlapping sample counts,
+valid sample counts, and BPM statistics. It does not resolve absolute calendar
+date, timezone, or gaze-session alignment.
