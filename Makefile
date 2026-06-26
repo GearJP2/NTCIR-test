@@ -10,6 +10,7 @@
 	evaluate-visual-boundaries \
 	compare-visual-retrieval \
 	sweep-transcript-boundary-weights \
+	build-castle-timeline-inventory \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -146,6 +147,15 @@ sweep-transcript-boundary-weights:
 		--output-csv $(or $(OUTPUT),processed/semantic/transcript_weight_sweep.csv) \
 		--output-summary $(or $(SUMMARY),processed/semantic/transcript_weight_sweep_summary.csv) \
 		$(foreach WEIGHT,$(WEIGHTS),--weight $(WEIGHT))
+
+build-castle-timeline-inventory:
+	python scripts/build_castle_timeline_inventory.py \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		$(foreach STEM,$(STEMS),--recording-stem $(STEM)) \
+		--metadata-sensor $(or $(SENSOR),ACCL) \
+		--output-csv $(or $(OUTPUT),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		--output-json $(or $(JSON),processed/timeline/day1_Allie/source_timeline_inventory.json)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:

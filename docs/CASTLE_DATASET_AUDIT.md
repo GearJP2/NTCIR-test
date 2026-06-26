@@ -270,3 +270,35 @@ Run the reproducible sweep with:
 ```bash
 make sweep-transcript-boundary-weights WEIGHTS="0 0.1 0.25 0.5"
 ```
+
+## Development timeline source inventory
+
+The first timeline inventory command inspects one clock-bearing main metadata
+stream (`ACCL`) for recordings `08`, `09`, and `10`, plus Allie's day-1
+heart-rate and gaze CSV files:
+
+```bash
+make build-castle-timeline-inventory STEMS="08 09 10"
+```
+
+The generated development output is
+`processed/timeline/day1_Allie/source_timeline_inventory.csv`.
+
+Key findings:
+
+- `day1/Allie/08.ACCL` starts at `08:05:17.180` and ends at `08:59:59.998`.
+- `day1/Allie/09.ACCL` starts at `09:00:00.003` and ends at `09:59:59.997`.
+- `day1/Allie/10.ACCL` starts at `10:00:00.002` and ends at `10:59:59.996`.
+- `auxiliary/heartrate/Allie/day1.csv` uses elapsed `HH:MM:SS.s` time,
+  from `00:00:02.0` to `23:59:59.0`, and still needs a participant/day
+  session anchor before event-level aggregation.
+- `auxiliary/gaze/Allie.csv` has header start
+  `TIME(2024/12/04 16:54:18.272)` and elapsed row times from `0.00000` to
+  `1233.54395` seconds. This is an anchor candidate, but timezone and mapping
+  to CASTLE `day1` recordings remain unresolved.
+
+This confirms that video recording stems are not reliable absolute start
+times: recording `08` begins about five minutes after 08:00 according to the
+metadata clock stream. Until the calendar date and timezone are confirmed,
+Event Records should continue to report recording-relative core intervals and
+store clock metadata as an unresolved alignment source.
