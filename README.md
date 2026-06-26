@@ -143,3 +143,13 @@ recording-relative Event Records onto the heart-rate CSV's elapsed day clock.
 The summary CSV records mapped clock intervals, overlapping sample counts,
 valid sample counts, and BPM statistics. It does not resolve absolute calendar
 date, timezone, or gaze-session alignment.
+
+Build gaze alignment diagnostics before attaching gaze to Event Records:
+
+```bash
+make build-castle-gaze-alignment-diagnostics
+```
+
+This writes stream-level gaze quality stats and candidate clock-overlap checks
+under `processed/timeline/day1_Allie/`. Gaze remains diagnostic-only until a
+participant/day recording anchor is demonstrated rather than assumed.

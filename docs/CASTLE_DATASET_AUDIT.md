@@ -332,3 +332,29 @@ each event so alignment and coverage can be inspected without parsing JSONL.
 This is intentionally narrower than full multimodal alignment: it provides a
 clock-of-day heart-rate join for development events, while calendar date,
 timezone, and gaze-session mapping remain unresolved.
+
+## Development gaze alignment diagnostics
+
+Gaze is not yet attached to Event Records. The current diagnostic command is:
+
+```bash
+make build-castle-gaze-alignment-diagnostics
+```
+
+It writes:
+
+- `processed/timeline/day1_Allie/gaze_stream_summary.csv`
+- `processed/timeline/day1_Allie/gaze_alignment_candidates.csv`
+
+For Allie's current gaze file, the stream summary reports one media stream
+(`NewMedia0`) from `0.00000` to `1233.54395` seconds with roughly 65% valid
+fixation rows and no AOI labels. Candidate clock checks compare:
+
+1. the header clock-of-day anchor from `TIME(2024/12/04 16:54:18.272)`;
+2. elapsed seconds treated as a day-clock diagnostic;
+3. recording metadata clock windows from the timeline inventory.
+
+Neither candidate clock interpretation overlaps the `08`, `09`, or `10`
+recording clock windows. That is evidence against attaching gaze summaries to
+Event Records in the development slice without an additional participant/day
+session mapping source.

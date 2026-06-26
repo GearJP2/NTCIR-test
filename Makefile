@@ -12,6 +12,7 @@
 	sweep-transcript-boundary-weights \
 	build-castle-timeline-inventory \
 	enrich-castle-heart-rate \
+	build-castle-gaze-alignment-diagnostics \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -167,6 +168,16 @@ enrich-castle-heart-rate:
 		--day $(or $(DAY),day1) \
 		--participant-id $(or $(PARTICIPANT),Allie) \
 		--min-confidence $(or $(MIN_CONFIDENCE),1.0)
+
+build-castle-gaze-alignment-diagnostics:
+	python scripts/build_castle_gaze_alignment_diagnostics.py \
+		--timeline-inventory $(or $(TIMELINE_INVENTORY),processed/timeline/day1_Allie/source_timeline_inventory.csv) \
+		$(if $(GAZE_CSV),--gaze-csv $(GAZE_CSV)) \
+		--day $(or $(DAY),day1) \
+		--participant-id $(or $(PARTICIPANT),Allie) \
+		--revision $(or $(REVISION),c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4) \
+		--output-streams $(or $(STREAMS),processed/timeline/day1_Allie/gaze_stream_summary.csv) \
+		--output-alignment $(or $(ALIGNMENT),processed/timeline/day1_Allie/gaze_alignment_candidates.csv)
 
 # Legacy ActivityNet pipeline retained for provenance during CASTLE migration.
 ingest-activitynet:
