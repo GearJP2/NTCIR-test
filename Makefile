@@ -18,6 +18,7 @@
 	build-castle-auxiliary-diagnostics \
 	check-castle-manifest-modality-readiness \
 	build-castle-auxiliary-report \
+	finalize-castle-semantic-chunking \
 	ingest-activitynet build-activitynet-manifest eval-moments eval-activitynet-profile-sweep \
 	summarize-activitynet-results compare-activitynet-results \
 	summarize-activitynet-temporal-tradeoff \
@@ -215,6 +216,17 @@ build-castle-auxiliary-report:
 		--manifest-violations-csv $(or $(VIOLATIONS),processed/timeline/day1_Allie/modality_readiness_violations.csv) \
 		--output-markdown $(or $(REPORT_MD),processed/timeline/day1_Allie/auxiliary_diagnostics_report.md) \
 		--output-json $(or $(REPORT_JSON),processed/timeline/day1_Allie/auxiliary_diagnostics_report.json)
+
+finalize-castle-semantic-chunking:
+	python scripts/finalize_castle_semantic_chunking.py \
+		$(or $(MANIFEST),processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl) \
+		--transcript-weight $(or $(TRANSCRIPT_WEIGHT),0.25) \
+		--sweep-summary $(or $(SWEEP_SUMMARY),processed/semantic/transcript_weight_sweep_summary.csv) \
+		--modality-violations $(or $(VIOLATIONS),processed/timeline/day1_Allie/modality_readiness_violations.csv) \
+		--min-event-ms $(or $(MIN_EVENT_MS),10000) \
+		--max-event-ms $(or $(MAX_EVENT_MS),60000) \
+		--output-markdown $(or $(REPORT_MD),processed/semantic/final_semantic_chunking_report.md) \
+		--output-json $(or $(REPORT_JSON),processed/semantic/final_semantic_chunking_report.json)
 
 build-castle-auxiliary-diagnostics:
 	$(MAKE) build-castle-timeline-inventory DAY=$(or $(DAY),day1) PARTICIPANT=$(or $(PARTICIPANT),Allie) STEMS="$(or $(STEMS),08 09 10)"

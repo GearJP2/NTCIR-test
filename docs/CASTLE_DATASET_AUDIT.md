@@ -431,3 +431,23 @@ It writes `auxiliary_diagnostics_report.md` and
 `auxiliary_diagnostics_report.json`, summarising the readiness decisions, gaze
 stream statistics, candidate overlap counts, thermal assignment counts, and
 manifest guard violations.
+
+## Final semantic chunking gate
+
+The current development semantic chunking artifact is finalized with:
+
+```bash
+make finalize-castle-semantic-chunking
+```
+
+The gate validates that:
+
+- the selected transcript boundary weight is present in the sweep summary;
+- semantic micro-events respect the configured duration bounds;
+- the Event Manifest validates structurally;
+- modality-readiness violations are zero.
+
+It writes `processed/semantic/final_semantic_chunking_report.md` and
+`processed/semantic/final_semantic_chunking_report.json`. A `ready` status
+means the current dev-slice chunking artifact is acceptable for retrieval
+experiments; it does not claim gaze or thermal enrichment is ready.
