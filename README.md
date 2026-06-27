@@ -198,3 +198,13 @@ make build-castle-auxiliary-report
 ```
 
 This emits Markdown and JSON summaries under `processed/timeline/day1_Allie/`.
+
+Finalize the current semantic chunking artifact:
+
+```bash
+make finalize-castle-semantic-chunking
+```
+
+This validates the selected `0.25` transcript-weight semantic manifest against
+duration bounds, the transcript-weight sweep summary, and modality-readiness
+violations, then writes Markdown/JSON chunking reports.

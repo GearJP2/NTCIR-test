@@ -11,6 +11,7 @@ from PIL import Image
 
 from evaluation.visual_retrieval import (
     VisualCandidate,
+    recall_at_k,
     rank_visual_candidates,
     temporal_iou,
     temporal_overlap_ratio,
@@ -145,12 +146,18 @@ def main(
             {
                 "candidate_type": candidate_type,
                 "query_count": len(rows),
-                "Recall@1": sum(row["hit_rank"] == 1 for row in rows) / len(rows),
-                "Recall@3": sum(
-                    row["hit_rank"] is not None and row["hit_rank"] <= 3
-                    for row in rows
-                )
-                / len(rows),
+                "Recall@1": recall_at_k(
+                    [row["hit_rank"] for row in rows],
+                    1,
+                ),
+                "Recall@3": recall_at_k(
+                    [row["hit_rank"] for row in rows],
+                    3,
+                ),
+                "Recall@10": recall_at_k(
+                    [row["hit_rank"] for row in rows],
+                    10,
+                ),
                 "MRR": sum(
                     1 / row["hit_rank"] if row["hit_rank"] is not None else 0
                     for row in rows

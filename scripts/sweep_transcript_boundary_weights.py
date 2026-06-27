@@ -10,6 +10,7 @@ import typer
 
 from evaluation.boundary_metrics import evaluate_boundaries
 from evaluation.visual_retrieval import (
+    recall_at_k,
     rank_visual_candidates,
     temporal_iou,
     temporal_overlap_ratio,
@@ -218,13 +219,9 @@ def _evaluate_retrieval(
     query_count = len(queries)
     return {
         "query_count": query_count,
-        "retrieval_recall_at_1": (
-            sum(rank == 1 for rank in hit_ranks) / query_count
-        ),
-        "retrieval_recall_at_3": (
-            sum(rank is not None and rank <= 3 for rank in hit_ranks)
-            / query_count
-        ),
+        "retrieval_recall_at_1": recall_at_k(hit_ranks, 1),
+        "retrieval_recall_at_3": recall_at_k(hit_ranks, 3),
+        "retrieval_recall_at_10": recall_at_k(hit_ranks, 10),
         "retrieval_mrr": sum(
             1 / rank if rank is not None else 0 for rank in hit_ranks
         )
@@ -271,6 +268,11 @@ def _summarize(rows: list[dict], weights: list[float]) -> list[dict]:
                 "retrieval_recall_at_3": float(
                     np.mean(
                         [row["retrieval_recall_at_3"] for row in selected]
+                    )
+                ),
+                "retrieval_recall_at_10": float(
+                    np.mean(
+                        [row["retrieval_recall_at_10"] for row in selected]
                     )
                 ),
                 "retrieval_mrr": float(
