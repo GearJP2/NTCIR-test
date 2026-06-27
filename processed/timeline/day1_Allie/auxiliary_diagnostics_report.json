@@ -1,0 +1,52 @@
+{
+  "participant_id": "Allie",
+  "day": "day1",
+  "attachable_modalities": [
+    "heart_rate"
+  ],
+  "blocked_modalities": [
+    "gaze",
+    "thermal"
+  ],
+  "readiness": [
+    {
+      "participant_id": "Allie",
+      "day": "day1",
+      "modality": "heart_rate",
+      "attach_to_event_records": "True",
+      "status": "attachable_with_clock_day_join",
+      "evidence_rows": "2",
+      "blocker": "",
+      "next_action": "Keep calendar date/timezone caveat in docs; use QA summary for coverage."
+    },
+    {
+      "participant_id": "Allie",
+      "day": "day1",
+      "modality": "gaze",
+      "attach_to_event_records": "False",
+      "status": "blocked_no_clock_overlap",
+      "evidence_rows": "6",
+      "blocker": "no candidate gaze clock interpretation overlaps recordings",
+      "next_action": "Find participant/day gaze session mapping before EventRecord enrichment."
+    },
+    {
+      "participant_id": "Allie",
+      "day": "day1",
+      "modality": "thermal",
+      "attach_to_event_records": "False",
+      "status": "blocked_unassigned",
+      "evidence_rows": "39",
+      "blocker": "thermal files lack participant/day/timestamp assignment",
+      "next_action": "Find external capture manifest or image metadata before enrichment."
+    }
+  ],
+  "gaze_streams": 1,
+  "gaze_rows": 88478,
+  "gaze_valid_ratio": 0.6548633558624742,
+  "gaze_alignment_candidates": 6,
+  "gaze_overlapping_candidates": 0,
+  "thermal_files": 39,
+  "thermal_unassigned_files": 39,
+  "thermal_without_timestamp_files": 39,
+  "manifest_violations": 0
+}

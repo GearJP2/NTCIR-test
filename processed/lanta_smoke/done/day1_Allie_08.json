@@ -1,0 +1,8 @@
+{
+  "video_id": "day1_Allie_08",
+  "manifest_path": "processed/lanta_smoke/manifests/day1_Allie_08.jsonl",
+  "embeddings_path": "processed/lanta_smoke/embeddings/day1_Allie_08.npz",
+  "scores_path": "processed/lanta_smoke/scores/day1_Allie_08.csv",
+  "event_count": 7,
+  "frame_count": 7
+}

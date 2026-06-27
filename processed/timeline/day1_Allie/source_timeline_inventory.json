@@ -1,0 +1,67 @@
+[
+  {
+    "source": "day1/Allie/08.ACCL",
+    "path": "/home/rojsak/.cache/huggingface/hub/datasets--CASTLE-Dataset--CASTLE2024/snapshots/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/main/day1/Allie/metadata/08.ACCL.csv",
+    "time_field": "time",
+    "original_time_format": "clock-of-day HH:MM:SS.sss",
+    "first_time": "08:05:17.180",
+    "last_time": "08:59:59.998",
+    "first_offset_ms": 29117180,
+    "last_offset_ms": 32399998,
+    "row_count": 649768,
+    "anchor_status": "date/timezone unresolved",
+    "notes": "clock-of-day must be combined with CASTLE day date and timezone"
+  },
+  {
+    "source": "day1/Allie/09.ACCL",
+    "path": "/home/rojsak/.cache/huggingface/hub/datasets--CASTLE-Dataset--CASTLE2024/snapshots/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/main/day1/Allie/metadata/09.ACCL.csv",
+    "time_field": "time",
+    "original_time_format": "clock-of-day HH:MM:SS.sss",
+    "first_time": "09:00:00.003",
+    "last_time": "09:59:59.997",
+    "first_offset_ms": 32400003,
+    "last_offset_ms": 35999997,
+    "row_count": 671839,
+    "anchor_status": "date/timezone unresolved",
+    "notes": "clock-of-day must be combined with CASTLE day date and timezone"
+  },
+  {
+    "source": "day1/Allie/10.ACCL",
+    "path": "/home/rojsak/.cache/huggingface/hub/datasets--CASTLE-Dataset--CASTLE2024/snapshots/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/main/day1/Allie/metadata/10.ACCL.csv",
+    "time_field": "time",
+    "original_time_format": "clock-of-day HH:MM:SS.sss",
+    "first_time": "10:00:00.002",
+    "last_time": "10:59:59.996",
+    "first_offset_ms": 36000002,
+    "last_offset_ms": 39599996,
+    "row_count": 694560,
+    "anchor_status": "date/timezone unresolved",
+    "notes": "clock-of-day must be combined with CASTLE day date and timezone"
+  },
+  {
+    "source": "auxiliary/heartrate/Allie/day1",
+    "path": "/home/rojsak/.cache/huggingface/hub/datasets--CASTLE-Dataset--CASTLE2024/snapshots/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/auxiliary/heartrate/Allie/day1.csv",
+    "time_field": "time",
+    "original_time_format": "elapsed HH:MM:SS.s",
+    "first_time": "00:00:02.0",
+    "last_time": "23:59:59.0",
+    "first_offset_ms": 2000,
+    "last_offset_ms": 86399000,
+    "row_count": 38413,
+    "anchor_status": "participant/day session start unresolved",
+    "notes": "elapsed samples require an external session anchor"
+  },
+  {
+    "source": "auxiliary/gaze/Allie",
+    "path": "/home/rojsak/.cache/huggingface/hub/datasets--CASTLE-Dataset--CASTLE2024/snapshots/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/auxiliary/gaze/Allie.csv",
+    "time_field": "TIME(2024/12/04 16:54:18.272)",
+    "original_time_format": "header session start plus elapsed TIME seconds",
+    "first_time": "0.00000",
+    "last_time": "1233.54395",
+    "first_offset_ms": 0,
+    "last_offset_ms": 1233544,
+    "row_count": 88478,
+    "anchor_status": "header session start present; timezone unresolved",
+    "notes": "session_start=2024/12/04 16:54:18.272"
+  }
+]

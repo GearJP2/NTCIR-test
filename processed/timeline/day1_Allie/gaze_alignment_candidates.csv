@@ -1,0 +1,7 @@
+gaze_source,media_id,media_name,candidate_anchor,candidate_start_clock_ms,candidate_end_clock_ms,recording_video_id,recording_start_clock_ms,recording_end_clock_ms,overlap_ms,overlap_ratio,status,notes
+auxiliary/gaze/Allie,0,NewMedia0,header_clock_of_day,60858272,62091816,day1_Allie_08,29117180,32399998,0,0.0,no_overlap,uses gaze header time-of-day; date/timezone unresolved
+auxiliary/gaze/Allie,0,NewMedia0,header_clock_of_day,60858272,62091816,day1_Allie_09,32400003,35999997,0,0.0,no_overlap,uses gaze header time-of-day; date/timezone unresolved
+auxiliary/gaze/Allie,0,NewMedia0,header_clock_of_day,60858272,62091816,day1_Allie_10,36000002,39599996,0,0.0,no_overlap,uses gaze header time-of-day; date/timezone unresolved
+auxiliary/gaze/Allie,0,NewMedia0,elapsed_day_clock,0,1233544,day1_Allie_08,29117180,32399998,0,0.0,no_overlap,treats gaze elapsed seconds as day clock; diagnostic only
+auxiliary/gaze/Allie,0,NewMedia0,elapsed_day_clock,0,1233544,day1_Allie_09,32400003,35999997,0,0.0,no_overlap,treats gaze elapsed seconds as day clock; diagnostic only
+auxiliary/gaze/Allie,0,NewMedia0,elapsed_day_clock,0,1233544,day1_Allie_10,36000002,39599996,0,0.0,no_overlap,treats gaze elapsed seconds as day clock; diagnostic only

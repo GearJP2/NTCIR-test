@@ -1,0 +1,2 @@
+source,media_id,media_name,session_start,first_elapsed_ms,last_elapsed_ms,duration_ms,row_count,valid_fixation_count,valid_ratio,unique_fixation_count,aoi_label_count,top_aoi_labels
+auxiliary/gaze/Allie,0,NewMedia0,2024/12/04 16:54:18.272,0,1233544,1233544,88478,57941,0.6548633558624742,3047,0,

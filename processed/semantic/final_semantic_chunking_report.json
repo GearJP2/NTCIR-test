@@ -1,0 +1,21 @@
+{
+  "manifest_path": "processed/semantic/dev_08_400_700_visual_text_hr_events.jsonl",
+  "video_ids": [
+    "day1_Allie_08"
+  ],
+  "selected_transcript_weight": 0.25,
+  "selected_weight_boundary_f1": 0.6000000000000001,
+  "selected_weight_recall_at_1": 0.3333333333333333,
+  "macro_event_count": 1,
+  "micro_event_count": 9,
+  "transcript_covered_events": 8,
+  "heart_rate_covered_events": 10,
+  "gaze_covered_events": 0,
+  "thermal_covered_events": 0,
+  "min_micro_duration_ms": 10000,
+  "max_micro_duration_ms": 60000,
+  "mean_micro_duration_ms": 33333.333333333336,
+  "manifest_modality_violation_count": 0,
+  "chunking_status": "ready",
+  "blockers": []
+}

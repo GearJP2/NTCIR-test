@@ -1,0 +1,309 @@
+[
+  {
+    "config": {
+      "name": "v1-adjacent",
+      "detector": "v1",
+      "context_radius": 2,
+      "smoothing_radius": 1,
+      "boundary_percentile": 85.0,
+      "min_boundary_score": 0.01,
+      "min_event_ms": 10000,
+      "max_event_ms": 60000
+    },
+    "summary": {
+      "name": "v1-adjacent",
+      "detector": "v1",
+      "learned_boundary_count": 6,
+      "forced_split_count": 3,
+      "event_count": 10,
+      "min_duration_ms": 10000,
+      "max_duration_ms": 60000,
+      "mean_duration_ms": 30000.0
+    },
+    "boundary_timestamps_ms": [
+      555000,
+      565000,
+      575000,
+      605000,
+      615000,
+      690000
+    ],
+    "intervals": [
+      {
+        "start_ms": 400000,
+        "end_ms": 460000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 460000,
+        "end_ms": 520000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 520000,
+        "end_ms": 555000,
+        "boundary_confidence": 0.3045545220375061
+      },
+      {
+        "start_ms": 555000,
+        "end_ms": 565000,
+        "boundary_confidence": 0.2962125837802887
+      },
+      {
+        "start_ms": 565000,
+        "end_ms": 575000,
+        "boundary_confidence": 0.2998206913471222
+      },
+      {
+        "start_ms": 575000,
+        "end_ms": 605000,
+        "boundary_confidence": 0.30732956528663635
+      },
+      {
+        "start_ms": 605000,
+        "end_ms": 615000,
+        "boundary_confidence": 0.31142157316207886
+      },
+      {
+        "start_ms": 615000,
+        "end_ms": 675000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 675000,
+        "end_ms": 690000,
+        "boundary_confidence": 0.30189862847328186
+      },
+      {
+        "start_ms": 690000,
+        "end_ms": 700000,
+        "boundary_confidence": 0.30189862847328186
+      }
+    ]
+  },
+  {
+    "config": {
+      "name": "v2-contextual-r1",
+      "detector": "v2",
+      "context_radius": 1,
+      "smoothing_radius": 1,
+      "boundary_percentile": 85.0,
+      "min_boundary_score": 0.01,
+      "min_event_ms": 10000,
+      "max_event_ms": 60000
+    },
+    "summary": {
+      "name": "v2-contextual-r1",
+      "detector": "v2",
+      "learned_boundary_count": 7,
+      "forced_split_count": 3,
+      "event_count": 10,
+      "min_duration_ms": 10000,
+      "max_duration_ms": 60000,
+      "mean_duration_ms": 30000.0
+    },
+    "boundary_timestamps_ms": [
+      420000,
+      430000,
+      555000,
+      565000,
+      575000,
+      595000,
+      690000
+    ],
+    "intervals": [
+      {
+        "start_ms": 400000,
+        "end_ms": 420000,
+        "boundary_confidence": 0.2577911913394928
+      },
+      {
+        "start_ms": 420000,
+        "end_ms": 430000,
+        "boundary_confidence": 0.22790825366973877
+      },
+      {
+        "start_ms": 430000,
+        "end_ms": 490000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 490000,
+        "end_ms": 550000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 550000,
+        "end_ms": 565000,
+        "boundary_confidence": 0.25999677181243896
+      },
+      {
+        "start_ms": 565000,
+        "end_ms": 575000,
+        "boundary_confidence": 0.23157525062561035
+      },
+      {
+        "start_ms": 575000,
+        "end_ms": 595000,
+        "boundary_confidence": 0.22031375765800476
+      },
+      {
+        "start_ms": 595000,
+        "end_ms": 655000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 655000,
+        "end_ms": 690000,
+        "boundary_confidence": 0.25072363018989563
+      },
+      {
+        "start_ms": 690000,
+        "end_ms": 700000,
+        "boundary_confidence": 0.25072363018989563
+      }
+    ]
+  },
+  {
+    "config": {
+      "name": "v2-contextual-r2",
+      "detector": "v2",
+      "context_radius": 2,
+      "smoothing_radius": 1,
+      "boundary_percentile": 85.0,
+      "min_boundary_score": 0.01,
+      "min_event_ms": 10000,
+      "max_event_ms": 60000
+    },
+    "summary": {
+      "name": "v2-contextual-r2",
+      "detector": "v2",
+      "learned_boundary_count": 6,
+      "forced_split_count": 2,
+      "event_count": 9,
+      "min_duration_ms": 10000,
+      "max_duration_ms": 60000,
+      "mean_duration_ms": 33333.333333333336
+    },
+    "boundary_timestamps_ms": [
+      410000,
+      430000,
+      460000,
+      630000,
+      655000,
+      690000
+    ],
+    "intervals": [
+      {
+        "start_ms": 400000,
+        "end_ms": 410000,
+        "boundary_confidence": 0.1840396523475647
+      },
+      {
+        "start_ms": 410000,
+        "end_ms": 430000,
+        "boundary_confidence": 0.19584903120994568
+      },
+      {
+        "start_ms": 430000,
+        "end_ms": 460000,
+        "boundary_confidence": 0.1795259565114975
+      },
+      {
+        "start_ms": 460000,
+        "end_ms": 520000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 520000,
+        "end_ms": 580000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 580000,
+        "end_ms": 630000,
+        "boundary_confidence": 0.17946001887321472
+      },
+      {
+        "start_ms": 630000,
+        "end_ms": 655000,
+        "boundary_confidence": 0.1978302299976349
+      },
+      {
+        "start_ms": 655000,
+        "end_ms": 690000,
+        "boundary_confidence": 0.2532140612602234
+      },
+      {
+        "start_ms": 690000,
+        "end_ms": 700000,
+        "boundary_confidence": 0.2532140612602234
+      }
+    ]
+  },
+  {
+    "config": {
+      "name": "v2-contextual-r3",
+      "detector": "v2",
+      "context_radius": 3,
+      "smoothing_radius": 1,
+      "boundary_percentile": 85.0,
+      "min_boundary_score": 0.01,
+      "min_event_ms": 10000,
+      "max_event_ms": 60000
+    },
+    "summary": {
+      "name": "v2-contextual-r3",
+      "detector": "v2",
+      "learned_boundary_count": 4,
+      "forced_split_count": 2,
+      "event_count": 7,
+      "min_duration_ms": 10000,
+      "max_duration_ms": 60000,
+      "mean_duration_ms": 42857.142857142855
+    },
+    "boundary_timestamps_ms": [
+      455000,
+      545000,
+      660000,
+      690000
+    ],
+    "intervals": [
+      {
+        "start_ms": 400000,
+        "end_ms": 455000,
+        "boundary_confidence": 0.16103225946426392
+      },
+      {
+        "start_ms": 455000,
+        "end_ms": 515000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 515000,
+        "end_ms": 545000,
+        "boundary_confidence": 0.16602759063243866
+      },
+      {
+        "start_ms": 545000,
+        "end_ms": 605000,
+        "boundary_confidence": 0.0
+      },
+      {
+        "start_ms": 605000,
+        "end_ms": 660000,
+        "boundary_confidence": 0.20419345796108246
+      },
+      {
+        "start_ms": 660000,
+        "end_ms": 690000,
+        "boundary_confidence": 0.2579297125339508
+      },
+      {
+        "start_ms": 690000,
+        "end_ms": 700000,
+        "boundary_confidence": 0.2579297125339508
+      }
+    ]
+  }
+]
