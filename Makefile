@@ -2,6 +2,7 @@
 	audit-castle \
 	build-castle-slice \
 	build-castle-fixed-manifest \
+	build-castle-all-recordings \
 	enrich-castle-transcripts \
 	download-castle-slice \
 	sample-castle-frames \
@@ -9,6 +10,7 @@
 	compare-visual-segmenters \
 	evaluate-visual-boundaries \
 	compare-visual-retrieval \
+	compare-castle-event-retrieval-cases \
 	sweep-transcript-boundary-weights \
 	build-castle-timeline-inventory \
 	enrich-castle-heart-rate \
@@ -85,6 +87,13 @@ build-castle-fixed-manifest:
 		--window $(or $(WINDOW),30s) \
 		--processing-version $(or $(PROCESSING_VERSION),dev)
 
+build-castle-all-recordings:
+	python scripts/build_castle_all_recordings.py \
+		--output-path $(or $(OUTPUT),processed/all_castle/recordings.jsonl) \
+		--failures-path $(or $(FAILURES),processed/all_castle/recording_failures.csv) \
+		--workers $(or $(WORKERS),8) \
+		$(if $(MAX_RECORDINGS),--max-recordings $(MAX_RECORDINGS))
+
 enrich-castle-transcripts:
 	python scripts/enrich_castle_transcripts.py \
 		$(or $(INPUT),processed/slices/day1_Allie/fixed_30s.jsonl) \
@@ -147,6 +156,17 @@ compare-visual-retrieval:
 		$(or $(QUERIES),evaluation/fixtures/castle_dev08_visual_queries.jsonl) \
 		--output-results $(or $(RESULTS),processed/semantic/dev_08_400_700_visual_retrieval_results.csv) \
 		--output-summary $(or $(SUMMARY),processed/semantic/dev_08_400_700_visual_retrieval_summary.csv)
+
+compare-castle-event-retrieval-cases:
+	python scripts/compare_castle_event_retrieval_cases.py \
+		$(or $(CASES),evaluation/fixtures/castle_transcript_weight_cases.jsonl) \
+		--transcript-spans $(or $(TRANSCRIPT_SPANS),processed/slices/day1_Allie/dev_08_10_cleaned_transcripts.jsonl) \
+		--output-cases $(or $(OUTPUT_CASES),processed/semantic/castle_event_retrieval_cases.csv) \
+		--output-summary $(or $(SUMMARY),processed/semantic/castle_event_retrieval_summary.csv) \
+		--transcript-weight $(or $(TRANSCRIPT_WEIGHT),0.25) \
+		--transcript-rerank-weight $(or $(TRANSCRIPT_RERANK_WEIGHT),0.05) \
+		--transcript-semantic-weight $(or $(TRANSCRIPT_SEMANTIC_WEIGHT),0.025) \
+		--heart-rate-rerank-weight $(or $(HEART_RATE_RERANK_WEIGHT),0.1)
 
 sweep-transcript-boundary-weights:
 	python scripts/sweep_transcript_boundary_weights.py \

@@ -44,6 +44,7 @@ def main(
     processing_version: str = typer.Option(...),
     model_name: str = typer.Option("ViT-B-32-quickgelu"),
     pretrained: str = typer.Option("openai"),
+    device: str = typer.Option("auto", help="Embedding device: auto, cpu, cuda, cuda:0, etc."),
     batch_size: int = typer.Option(16, min=1),
     detector: str = typer.Option("v1", help="Visual detector: v1 or v2."),
     context_radius: int = typer.Option(2, min=1),
@@ -65,7 +66,7 @@ def main(
         raise typer.BadParameter("at least two sampled frames are required")
 
     timestamps_ms = [int(path.stem) for path in paths]
-    model, preprocess, tokenizer = _load_model(model_name, pretrained)
+    model, preprocess, tokenizer = _load_model(model_name, pretrained, device=device)
     embeddings = _encode_images(model, preprocess, paths, batch_size)
     samples = [
         VisualSample(timestamp_ms=timestamp_ms, embedding=embedding)
@@ -206,31 +207,43 @@ def encode_frames(
     model_name: str,
     pretrained: str,
     batch_size: int,
+    device: str = "auto",
 ) -> np.ndarray:
-    model, preprocess, _ = _load_model(model_name, pretrained)
+    model, preprocess, _ = _load_model(model_name, pretrained, device=device)
     return _encode_images(model, preprocess, paths, batch_size)
 
 
-def _load_model(model_name: str, pretrained: str):
+def _load_model(model_name: str, pretrained: str, device: str = "auto"):
     import open_clip
+    import torch
 
     model, _, preprocess = open_clip.create_model_and_transforms(
         model_name,
         pretrained=pretrained,
         cache_dir="model_cache",
     )
-    return model.to("cpu").eval(), preprocess, open_clip.get_tokenizer(model_name)
+    selected_device = (
+        "cuda" if device == "auto" and torch.cuda.is_available() else device
+    )
+    if selected_device == "auto":
+        selected_device = "cpu"
+    return (
+        model.to(selected_device).eval(),
+        preprocess,
+        open_clip.get_tokenizer(model_name),
+    )
 
 
 def _encode_images(model, preprocess, paths: list[Path], batch_size: int) -> np.ndarray:
     import torch
 
     batches: list[np.ndarray] = []
+    device = next(model.parameters()).device
     for offset in range(0, len(paths), batch_size):
         batch_paths = paths[offset : offset + batch_size]
         batch = torch.stack(
             [preprocess(Image.open(path).convert("RGB")) for path in batch_paths]
-        )
+        ).to(device)
         with torch.no_grad():
             features = model.encode_image(batch)
             features = features / features.norm(dim=-1, keepdim=True)
@@ -241,7 +254,8 @@ def _encode_images(model, preprocess, paths: list[Path], batch_size: int) -> np.
 def _encode_texts(model, tokenizer, texts: list[str]) -> np.ndarray:
     import torch
 
-    tokens = tokenizer([text if text else " " for text in texts])
+    device = next(model.parameters()).device
+    tokens = tokenizer([text if text else " " for text in texts]).to(device)
     with torch.no_grad():
         features = model.encode_text(tokens)
         features = features / features.norm(dim=-1, keepdim=True)
