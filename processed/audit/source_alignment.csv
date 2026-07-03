@@ -1,0 +1,7 @@
+source,observed_format,canonicalization,status
+video,recording file stem under main/dayN/participant/video,derive absolute start from audited recording metadata,unresolved
+transcript,"JSON chunks with recording-relative [start_sec, end_sec]",recording_start_ms + timestamp_sec * 1000,validated sample; malformed intervals exist
+main metadata,clock-of-day HH:MM:SS.sss,"combine CASTLE day date, timezone, and clock time",date/timezone unresolved
+heart rate,elapsed HH:MM:SS.s plus bpm and confidence,participant/day session start + elapsed time,session anchor unresolved
+gaze,session start in TIME(...) header; elapsed TIME rows,header session start + elapsed TIME seconds,format validated; timezone unresolved
+thermal,sequential BMP filenames,requires external capture manifest or EXIF-equivalent evidence,unresolved and unassigned

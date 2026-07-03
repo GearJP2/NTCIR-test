@@ -1,0 +1,14 @@
+day,participant_id,recording_stem,video_path,transcript_path,metadata_prefix,duration_ms,status
+day1,Allie,08,main/day1/Allie/video/08.mp4,main/day1/Allie/transcript/08.json,08,3600039,malformed
+day1,Allie,09,main/day1/Allie/video/09.mp4,main/day1/Allie/transcript/09.json,09,3600840,malformed
+day1,Allie,10,main/day1/Allie/video/10.mp4,main/day1/Allie/transcript/10.json,10,3600717,malformed
+day1,Allie,11,main/day1/Allie/video/11.mp4,main/day1/Allie/transcript/11.json,11,3600017,malformed
+day1,Allie,12,main/day1/Allie/video/12.mp4,main/day1/Allie/transcript/12.json,12,3600623,malformed
+day1,Allie,13,main/day1/Allie/video/13.mp4,main/day1/Allie/transcript/13.json,13,3600377,malformed
+day1,Allie,14,main/day1/Allie/video/14.mp4,main/day1/Allie/transcript/14.json,14,3600014,malformed
+day1,Allie,15,main/day1/Allie/video/15.mp4,main/day1/Allie/transcript/15.json,15,3601944,malformed
+day1,Allie,16,main/day1/Allie/video/16.novideo,,,,missing_video
+day1,Allie,17,main/day1/Allie/video/17.novideo,,,,missing_video
+day1,Allie,18,main/day1/Allie/video/18.mp4,main/day1/Allie/transcript/18.json,18,3600023,malformed
+day1,Allie,19,main/day1/Allie/video/19.mp4,main/day1/Allie/transcript/19.json,19,3600681,malformed
+day1,Allie,20,main/day1/Allie/video/20.mp4,main/day1/Allie/transcript/20.json,20,3600859,valid

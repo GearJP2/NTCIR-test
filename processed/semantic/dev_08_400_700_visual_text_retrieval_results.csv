@@ -1,0 +1,82 @@
+query_id,query,candidate_type,rank,candidate_id,start_ms,end_ms,score,expected_overlap,temporal_iou,hit
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,1,day1_Allie_08_E_VISUAL_TEXT_00004,460000,520000,0.3125637173652649,0.631578947368421,0.631578947368421,True
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,2,day1_Allie_08_E_VISUAL_TEXT_00005,520000,545000,0.2838398814201355,0.2631578947368421,0.2631578947368421,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,3,day1_Allie_08_E_VISUAL_TEXT_00007,605000,655000,0.2761068642139435,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,4,day1_Allie_08_E_VISUAL_TEXT_00006,545000,605000,0.27117422223091125,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,5,day1_Allie_08_E_VISUAL_TEXT_00009,690000,700000,0.26953497529029846,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,6,day1_Allie_08_E_VISUAL_TEXT_00003,430000,460000,0.2679184079170227,0.10526315789473684,0.08695652173913043,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,7,day1_Allie_08_E_VISUAL_TEXT_00001,400000,410000,0.24274498224258423,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,8,day1_Allie_08_E_VISUAL_TEXT_00002,410000,430000,0.23761501908302307,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,semantic_visual_text,9,day1_Allie_08_E_VISUAL_TEXT_00008,655000,690000,0.21394668519496918,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,1,fixed:30000:6,500000,530000,0.31483954191207886,0.3157894736842105,0.3157894736842105,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,2,fixed:30000:5,480000,510000,0.3109162449836731,0.3157894736842105,0.3157894736842105,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,3,fixed:30000:4,460000,490000,0.3061967194080353,0.3157894736842105,0.3157894736842105,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,4,fixed:30000:3,440000,470000,0.2793090343475342,0.21052631578947367,0.19047619047619047,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,5,fixed:30000:7,520000,550000,0.2767425775527954,0.2631578947368421,0.25,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,6,fixed:30000:12,620000,650000,0.276533842086792,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,7,fixed:30000:10,580000,610000,0.2668081223964691,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,8,fixed:30000:2,420000,450000,0.2621419429779053,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,9,fixed:30000:13,640000,670000,0.2619655430316925,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,10,fixed:30000:11,600000,630000,0.2604456841945648,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,11,fixed:30000:9,560000,590000,0.2585134208202362,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,12,fixed:30000:15,680000,700000,0.2565299868583679,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,13,fixed:30000:1,400000,430000,0.24888329207897186,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,14,fixed:30000:8,540000,570000,0.24424904584884644,0.05263157894736842,0.041666666666666664,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_30s,15,fixed:30000:14,660000,690000,0.20725706219673157,0.0,0.0,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_120s,1,fixed:120000:1,400000,520000,0.2984703779220581,0.7368421052631579,0.4827586206896552,True
+dev08_visual_001,people reading and signing documents at a dining table,fixed_120s,2,fixed:120000:2,520000,640000,0.28161489963531494,0.2631578947368421,0.13157894736842105,False
+dev08_visual_001,people reading and signing documents at a dining table,fixed_120s,3,fixed:120000:3,640000,700000,0.25490137934684753,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,1,day1_Allie_08_E_VISUAL_TEXT_00008,655000,690000,0.32579436898231506,1.0,0.7142857142857143,True
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,2,day1_Allie_08_E_VISUAL_TEXT_00002,410000,430000,0.2931429445743561,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,3,day1_Allie_08_E_VISUAL_TEXT_00006,545000,605000,0.29103022813796997,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,4,day1_Allie_08_E_VISUAL_TEXT_00001,400000,410000,0.27828288078308105,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,5,day1_Allie_08_E_VISUAL_TEXT_00003,430000,460000,0.2575424909591675,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,6,day1_Allie_08_E_VISUAL_TEXT_00009,690000,700000,0.24766844511032104,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,7,day1_Allie_08_E_VISUAL_TEXT_00007,605000,655000,0.23918835818767548,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,8,day1_Allie_08_E_VISUAL_TEXT_00004,460000,520000,0.23585036396980286,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,semantic_visual_text,9,day1_Allie_08_E_VISUAL_TEXT_00005,520000,545000,0.2316749393939972,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,1,fixed:30000:14,660000,690000,0.33076968789100647,1.0,0.8333333333333334,True
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,2,fixed:30000:8,540000,570000,0.30312666296958923,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,3,fixed:30000:15,680000,700000,0.3021812438964844,0.4,0.2857142857142857,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,4,fixed:30000:1,400000,430000,0.2994033098220825,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,5,fixed:30000:9,560000,590000,0.28486642241477966,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,6,fixed:30000:2,420000,450000,0.27237918972969055,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,7,fixed:30000:13,640000,670000,0.2702118754386902,0.2,0.1,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,8,fixed:30000:10,580000,610000,0.25064972043037415,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,9,fixed:30000:3,440000,470000,0.2443721443414688,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,10,fixed:30000:7,520000,550000,0.24399539828300476,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,11,fixed:30000:11,600000,630000,0.24366866052150726,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,12,fixed:30000:5,480000,510000,0.23529350757598877,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,13,fixed:30000:12,620000,650000,0.23156817257404327,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,14,fixed:30000:6,500000,530000,0.22944223880767822,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_30s,15,fixed:30000:4,460000,490000,0.22749392688274384,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_120s,1,fixed:120000:3,640000,700000,0.30197882652282715,1.0,0.4166666666666667,True
+dev08_visual_002,someone looking inside a refrigerator,fixed_120s,2,fixed:120000:2,520000,640000,0.2730984687805176,0.0,0.0,False
+dev08_visual_002,someone looking inside a refrigerator,fixed_120s,3,fixed:120000:1,400000,520000,0.2680286765098572,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,1,day1_Allie_08_E_VISUAL_TEXT_00006,545000,605000,0.2910391092300415,1.0,0.9166666666666666,True
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,2,day1_Allie_08_E_VISUAL_TEXT_00001,400000,410000,0.2799430191516876,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,3,day1_Allie_08_E_VISUAL_TEXT_00009,690000,700000,0.27614983916282654,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,4,day1_Allie_08_E_VISUAL_TEXT_00008,655000,690000,0.26732581853866577,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,5,day1_Allie_08_E_VISUAL_TEXT_00004,460000,520000,0.2549857795238495,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,6,day1_Allie_08_E_VISUAL_TEXT_00003,430000,460000,0.25466981530189514,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,7,day1_Allie_08_E_VISUAL_TEXT_00005,520000,545000,0.2365850806236267,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,8,day1_Allie_08_E_VISUAL_TEXT_00002,410000,430000,0.23601242899894714,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,semantic_visual_text,9,day1_Allie_08_E_VISUAL_TEXT_00007,605000,655000,0.22976575791835785,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,1,fixed:30000:9,560000,590000,0.2937852740287781,0.5454545454545454,0.5454545454545454,True
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,2,fixed:30000:15,680000,700000,0.28502678871154785,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,3,fixed:30000:8,540000,570000,0.271312415599823,0.45454545454545453,0.4166666666666667,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,4,fixed:30000:14,660000,690000,0.26394253969192505,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,5,fixed:30000:10,580000,610000,0.2629832327365875,0.36363636363636365,0.3076923076923077,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,6,fixed:30000:1,400000,430000,0.26120954751968384,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,7,fixed:30000:4,460000,490000,0.2608789801597595,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,8,fixed:30000:2,420000,450000,0.2593286335468292,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,9,fixed:30000:13,640000,670000,0.2583339214324951,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,10,fixed:30000:3,440000,470000,0.2557229995727539,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,11,fixed:30000:5,480000,510000,0.2427547723054886,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,12,fixed:30000:6,500000,530000,0.23996904492378235,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,13,fixed:30000:7,520000,550000,0.23952625691890717,0.09090909090909091,0.0625,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,14,fixed:30000:12,620000,650000,0.2213006466627121,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_30s,15,fixed:30000:11,600000,630000,0.21934132277965546,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_120s,1,fixed:120000:3,640000,700000,0.27500075101852417,0.0,0.0,False
+dev08_visual_003,people preparing food and kitchen equipment,fixed_120s,2,fixed:120000:2,520000,640000,0.2682587504386902,1.0,0.4583333333333333,True
+dev08_visual_003,people preparing food and kitchen equipment,fixed_120s,3,fixed:120000:1,400000,520000,0.2677117884159088,0.0,0.0,False

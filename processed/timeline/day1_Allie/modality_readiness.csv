@@ -1,0 +1,4 @@
+participant_id,day,modality,attach_to_event_records,status,evidence_rows,blocker,next_action
+Allie,day1,heart_rate,True,attachable_with_clock_day_join,2,,Keep calendar date/timezone caveat in docs; use QA summary for coverage.
+Allie,day1,gaze,False,blocked_no_clock_overlap,6,no candidate gaze clock interpretation overlaps recordings,Find participant/day gaze session mapping before EventRecord enrichment.
+Allie,day1,thermal,False,blocked_unassigned,39,thermal files lack participant/day/timestamp assignment,Find external capture manifest or image metadata before enrichment.

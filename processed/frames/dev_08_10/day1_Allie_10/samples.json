@@ -1,0 +1,14 @@
+{
+  "video_id": "day1_Allie_10",
+  "video_uri": "https://huggingface.co/datasets/CASTLE-Dataset/CASTLE2024/resolve/c8e7b5cd9e9c83d0ff42560fc1169bed7867abd4/main/day1/Allie/video/10.mp4",
+  "timestamps_sec": [
+    0.0,
+    600.0,
+    1200.0,
+    1800.0,
+    2400.0,
+    3000.0,
+    3600.0
+  ],
+  "written": 7
+}
