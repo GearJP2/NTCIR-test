@@ -92,6 +92,23 @@ def temporal_iou(
     return intersection / union if union > 0 else 0.0
 
 
+def temporal_precision(
+    candidate_start_ms: int,
+    candidate_end_ms: int,
+    expected_start_ms: int,
+    expected_end_ms: int,
+) -> float:
+    candidate_duration = candidate_end_ms - candidate_start_ms
+    if candidate_duration <= 0:
+        raise ValueError("candidate interval must have positive duration")
+    intersection = max(
+        0,
+        min(candidate_end_ms, expected_end_ms)
+        - max(candidate_start_ms, expected_start_ms),
+    )
+    return intersection / candidate_duration
+
+
 def recall_at_k(hit_ranks: list[int | None], k: int) -> float:
     if k < 1:
         raise ValueError("k must be positive")

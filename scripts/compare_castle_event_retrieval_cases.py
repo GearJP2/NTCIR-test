@@ -10,11 +10,12 @@ import typer
 
 from evaluation.visual_retrieval import (
     VisualCandidate,
-    recall_at_k,
     rank_visual_candidates,
+    recall_at_k,
     reciprocal_rank_fuse_visual_candidates,
     temporal_iou,
     temporal_overlap_ratio,
+    temporal_precision,
 )
 from scripts.build_visual_semantic_events import (
     _encode_images,
@@ -59,6 +60,7 @@ def main(
     min_event_sec: float = typer.Option(10.0, min=1.0),
     max_event_sec: float = typer.Option(60.0, min=1.0),
     hit_overlap: float = typer.Option(0.5, min=0.0, max=1.0),
+    refinement_overlap: float = typer.Option(0.8, min=0.0, max=1.0),
     rrf_k: int = typer.Option(60, min=1),
     semantic_weight: float = typer.Option(1.0, min=0.0),
     fixed_120s_weight: float = typer.Option(0.85, min=0.0),
@@ -212,6 +214,7 @@ def main(
             queries,
             query_embeddings,
             hit_overlap=hit_overlap,
+            refinement_overlap=None,
             rrf_k=rrf_k,
             semantic_weight=semantic_weight,
             fixed_120s_weight=fixed_120s_weight,
@@ -234,6 +237,40 @@ def main(
                     ]
                 ),
                 **_summarize_query_metrics(fused_per_query),
+            }
+        )
+        refined_fused_label = "fused_semantic_fixed120_rrf_semantic_refined"
+        refined_fused_per_query = _evaluate_fused_queries(
+            candidates_by_type[semantic_label],
+            candidates_by_type["fixed_120s"],
+            queries,
+            query_embeddings,
+            hit_overlap=hit_overlap,
+            refinement_overlap=refinement_overlap,
+            rrf_k=rrf_k,
+            semantic_weight=semantic_weight,
+            fixed_120s_weight=fixed_120s_weight,
+        )
+        aggregate_inputs.setdefault(refined_fused_label, []).extend(
+            refined_fused_per_query
+        )
+        case_rows.append(
+            {
+                "case_id": case["case_id"],
+                "video_id": case["video_id"],
+                "candidate_type": refined_fused_label,
+                "query_count": len(queries),
+                "candidate_count": (
+                    len(candidates_by_type[semantic_label])
+                    + len(candidates_by_type["fixed_120s"])
+                ),
+                "mean_candidate_duration_ms": _mean_duration(
+                    [
+                        *interval_sets[semantic_label],
+                        *interval_sets["fixed_120s"],
+                    ]
+                ),
+                **_summarize_query_metrics(refined_fused_per_query),
             }
         )
         fused_transcript_label = "fused_semantic_fixed120_rrf_transcript_hr_gated"
@@ -373,7 +410,11 @@ def _evaluate_queries(
         hit_rank = None
         best_overlap = 0.0
         best_tiou = 0.0
+        best_temporal_precision = 0.0
+        best_tiou_duration_ms = 0
         top1_tiou = 0.0
+        top1_temporal_precision = 0.0
+        top1_duration_ms = 0
         for rank, (candidate, _score) in enumerate(ranked, start=1):
             overlap = temporal_overlap_ratio(
                 candidate.start_ms,
@@ -387,10 +428,21 @@ def _evaluate_queries(
                 query["expected_start_ms"],
                 query["expected_end_ms"],
             )
+            precision = temporal_precision(
+                candidate.start_ms,
+                candidate.end_ms,
+                query["expected_start_ms"],
+                query["expected_end_ms"],
+            )
             best_overlap = max(best_overlap, overlap)
-            best_tiou = max(best_tiou, tiou)
+            if tiou > best_tiou:
+                best_tiou = tiou
+                best_temporal_precision = precision
+                best_tiou_duration_ms = candidate.end_ms - candidate.start_ms
             if rank == 1:
                 top1_tiou = tiou
+                top1_temporal_precision = precision
+                top1_duration_ms = candidate.end_ms - candidate.start_ms
             if hit_rank is None and overlap >= hit_overlap:
                 hit_rank = rank
         rows.append(
@@ -398,7 +450,11 @@ def _evaluate_queries(
                 "hit_rank": hit_rank,
                 "best_overlap": best_overlap,
                 "best_tiou": best_tiou,
+                "best_temporal_precision": best_temporal_precision,
+                "best_tiou_duration_ms": best_tiou_duration_ms,
                 "top1_tiou": top1_tiou,
+                "top1_temporal_precision": top1_temporal_precision,
+                "top1_duration_ms": top1_duration_ms,
             }
         )
     return rows
@@ -411,6 +467,7 @@ def _evaluate_fused_queries(
     query_embeddings: np.ndarray,
     *,
     hit_overlap: float,
+    refinement_overlap: float | None,
     rrf_k: int,
     semantic_weight: float,
     fixed_120s_weight: float,
@@ -427,6 +484,12 @@ def _evaluate_fused_queries(
             k=rrf_k,
             weights=[semantic_weight, fixed_120s_weight],
         )
+        if refinement_overlap is not None:
+            fused = _prefer_overlapping_semantic_candidates(
+                fused,
+                semantic_ranked,
+                min_semantic_coverage=refinement_overlap,
+            )
         rows.append(
             _evaluate_ranked_query(
                 fused,
@@ -435,6 +498,63 @@ def _evaluate_fused_queries(
             )
         )
     return rows
+
+
+def _prefer_overlapping_semantic_candidates(
+    ranked: list[tuple[VisualCandidate, float]],
+    semantic_ranked: list[tuple[VisualCandidate, float]],
+    *,
+    min_semantic_coverage: float,
+) -> list[tuple[VisualCandidate, float]]:
+    refined: list[tuple[VisualCandidate, float]] = []
+    used: set[str] = set()
+    semantic_by_id = {
+        candidate.candidate_id: (candidate, score)
+        for candidate, score in semantic_ranked
+    }
+
+    for candidate, score in ranked:
+        replacement = None
+        if candidate.candidate_id.startswith("fixed:"):
+            replacement = _best_semantic_inside_candidate(
+                candidate,
+                semantic_ranked,
+                min_semantic_coverage=min_semantic_coverage,
+            )
+        if replacement is not None:
+            selected_candidate, selected_score = replacement
+            if selected_candidate.candidate_id not in used:
+                refined.append((selected_candidate, selected_score))
+                used.add(selected_candidate.candidate_id)
+        if candidate.candidate_id in used:
+            continue
+        refined.append((candidate, score))
+        used.add(candidate.candidate_id)
+
+    for candidate, score in semantic_by_id.values():
+        if candidate.candidate_id not in used:
+            refined.append((candidate, score))
+            used.add(candidate.candidate_id)
+
+    return refined
+
+
+def _best_semantic_inside_candidate(
+    fixed_candidate: VisualCandidate,
+    semantic_ranked: list[tuple[VisualCandidate, float]],
+    *,
+    min_semantic_coverage: float,
+) -> tuple[VisualCandidate, float] | None:
+    for semantic_candidate, semantic_score in semantic_ranked:
+        semantic_coverage = temporal_overlap_ratio(
+            fixed_candidate.start_ms,
+            fixed_candidate.end_ms,
+            semantic_candidate.start_ms,
+            semantic_candidate.end_ms,
+        )
+        if semantic_coverage >= min_semantic_coverage:
+            return semantic_candidate, semantic_score
+    return None
 
 
 def _evaluate_transcript_reranked_queries(
@@ -583,7 +703,11 @@ def _evaluate_ranked_query(
     hit_rank = None
     best_overlap = 0.0
     best_tiou = 0.0
+    best_temporal_precision = 0.0
+    best_tiou_duration_ms = 0
     top1_tiou = 0.0
+    top1_temporal_precision = 0.0
+    top1_duration_ms = 0
     for rank, (candidate, _score) in enumerate(ranked, start=1):
         overlap = temporal_overlap_ratio(
             candidate.start_ms,
@@ -597,17 +721,32 @@ def _evaluate_ranked_query(
             query["expected_start_ms"],
             query["expected_end_ms"],
         )
+        precision = temporal_precision(
+            candidate.start_ms,
+            candidate.end_ms,
+            query["expected_start_ms"],
+            query["expected_end_ms"],
+        )
         best_overlap = max(best_overlap, overlap)
-        best_tiou = max(best_tiou, tiou)
+        if tiou > best_tiou:
+            best_tiou = tiou
+            best_temporal_precision = precision
+            best_tiou_duration_ms = candidate.end_ms - candidate.start_ms
         if rank == 1:
             top1_tiou = tiou
+            top1_temporal_precision = precision
+            top1_duration_ms = candidate.end_ms - candidate.start_ms
         if hit_rank is None and overlap >= hit_overlap:
             hit_rank = rank
     return {
         "hit_rank": hit_rank,
         "best_overlap": best_overlap,
         "best_tiou": best_tiou,
+        "best_temporal_precision": best_temporal_precision,
+        "best_tiou_duration_ms": best_tiou_duration_ms,
         "top1_tiou": top1_tiou,
+        "top1_temporal_precision": top1_temporal_precision,
+        "top1_duration_ms": top1_duration_ms,
     }
 
 
@@ -621,7 +760,19 @@ def _summarize_query_metrics(rows: list[dict]) -> dict:
         / len(rows),
         "mean_best_overlap": float(np.mean([row["best_overlap"] for row in rows])),
         "mean_best_tIoU": float(np.mean([row["best_tiou"] for row in rows])),
+        "mean_best_temporal_precision": float(
+            np.mean([row["best_temporal_precision"] for row in rows])
+        ),
+        "mean_best_tIoU_duration_ms": float(
+            np.mean([row["best_tiou_duration_ms"] for row in rows])
+        ),
         "mean_top1_tIoU": float(np.mean([row["top1_tiou"] for row in rows])),
+        "mean_top1_temporal_precision": float(
+            np.mean([row["top1_temporal_precision"] for row in rows])
+        ),
+        "mean_top1_duration_ms": float(
+            np.mean([row["top1_duration_ms"] for row in rows])
+        ),
     }
 
 
