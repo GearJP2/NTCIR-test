@@ -1,13 +1,17 @@
 # Larger Event-First Retrieval Evaluation
 
 Question: does segmenting CASTLE video into semantic events before embedding
-hold up under a larger, fairer visual retrieval comparison?
+hold up under a larger, fairer visual retrieval comparison for the CSAT goal of
+retrieving meaningful key interactions/events?
 
-Verdict: partially. Event-first retrieval is better for localization and better
-than fixed 30-second windows on the current four-case set. A fused
-semantic-event + fixed-120s fallback improves Recall@10 and best localization,
-but fixed 120-second windows still win coarse Recall@1/3 because they use very
-broad intervals.
+Verdict: partially, with a precision-oriented CSAT framing. Event-first
+retrieval is better for localization and better than fixed 30-second windows on
+the current four-case set. A fused semantic-event + fixed-120s fallback improves
+Recall@10 and best localization, but fixed 120-second windows still win coarse
+Recall@1/3 because they use very broad intervals. Since CSAT asks for key
+interactions/events rather than broad context clips, fixed 120-second hits
+should be treated as recall candidates or context for refinement, not as the
+preferred final answer interval.
 
 ## Evaluation Setup
 
@@ -29,6 +33,7 @@ Candidate types:
 - `fixed_120s`
 - `fixed_120s_transcript_rerank`
 - `fused_semantic_fixed120_rrf`
+- `fused_semantic_fixed120_rrf_semantic_refined`
 - `fused_semantic_fixed120_rrf_transcript_hr_gated`
 
 All candidate types used the same sampled frame embeddings, the same CLIP model,
@@ -44,16 +49,17 @@ similar physiological state.
 
 Source: `processed/semantic/castle_event_retrieval_summary.csv`
 
-| Candidate type | Queries | Recall@1 | Recall@3 | Recall@10 | MRR | Mean best tIoU | Mean top1 tIoU |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| semantic_visual_text_w0.25 | 10 | 0.400 | 0.500 | 0.900 | 0.517 | 0.616 | 0.299 |
-| semantic_visual_text_w0.25_transcript_rerank | 10 | 0.400 | 0.600 | 0.900 | 0.533 | 0.616 | 0.290 |
-| fixed_30s | 10 | 0.300 | 0.400 | 0.700 | 0.406 | 0.604 | 0.255 |
-| fixed_30s_transcript_rerank | 10 | 0.300 | 0.500 | 0.700 | 0.418 | 0.604 | 0.265 |
-| fixed_120s | 10 | 0.600 | 1.000 | 1.000 | 0.767 | 0.439 | 0.255 |
-| fixed_120s_transcript_rerank | 10 | 0.500 | 1.000 | 1.000 | 0.717 | 0.439 | 0.164 |
-| fused_semantic_fixed120_rrf | 10 | 0.400 | 0.500 | 1.000 | 0.528 | 0.641 | 0.299 |
-| fused_semantic_fixed120_rrf_transcript_hr_gated | 10 | 0.400 | 0.500 | 1.000 | 0.528 | 0.641 | 0.299 |
+| Candidate type | Queries | Recall@1 | Recall@3 | Recall@10 | MRR | Mean best tIoU | Mean best temporal precision | Mean top1 tIoU | Mean top1 temporal precision | Mean top1 duration |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| semantic_visual_text_w0.25 | 10 | 0.400 | 0.500 | 0.900 | 0.517 | 0.616 | 0.810 | 0.299 | 0.343 | 49.0s |
+| semantic_visual_text_w0.25_transcript_rerank | 10 | 0.400 | 0.600 | 0.900 | 0.533 | 0.616 | 0.810 | 0.290 | 0.327 | 48.5s |
+| fixed_30s | 10 | 0.300 | 0.400 | 0.700 | 0.406 | 0.604 | 0.967 | 0.255 | 0.383 | 30.0s |
+| fixed_30s_transcript_rerank | 10 | 0.300 | 0.500 | 0.700 | 0.418 | 0.604 | 0.967 | 0.265 | 0.400 | 29.0s |
+| fixed_120s | 10 | 0.600 | 1.000 | 1.000 | 0.767 | 0.439 | 0.454 | 0.255 | 0.279 | 96.0s |
+| fixed_120s_transcript_rerank | 10 | 0.500 | 1.000 | 1.000 | 0.717 | 0.439 | 0.454 | 0.164 | 0.179 | 96.0s |
+| fused_semantic_fixed120_rrf | 10 | 0.400 | 0.500 | 1.000 | 0.528 | 0.641 | 0.727 | 0.299 | 0.343 | 49.0s |
+| fused_semantic_fixed120_rrf_semantic_refined | 10 | 0.400 | 0.500 | 1.000 | 0.528 | 0.641 | 0.727 | 0.299 | 0.343 | 49.0s |
+| fused_semantic_fixed120_rrf_transcript_hr_gated | 10 | 0.400 | 0.500 | 1.000 | 0.528 | 0.641 | 0.727 | 0.299 | 0.343 | 49.0s |
 
 ## Interpretation
 
@@ -70,12 +76,30 @@ Fixed 120-second windows beat semantic events on coarse recall:
 - Recall@3: `1.000` vs `0.500`;
 - Recall@10: `1.000` vs `0.900`.
 
+But fixed 120-second windows are weaker under precision-oriented CSAT
+interpretation:
+
+- mean best temporal precision: `0.454` vs semantic `0.810`;
+- mean best tIoU: `0.439` vs semantic `0.616`;
+- mean top-1 duration: `96.0s` vs semantic `49.0s`.
+
 Fusing semantic events with fixed 120-second fallback changes the tradeoff:
 
 - Recall@10 improves from semantic-only `0.900` to `1.000`;
 - mean best tIoU improves from semantic-only `0.616` to `0.641`;
+- mean best temporal precision remains stronger than fixed 120s alone
+  (`0.727` vs `0.454`);
 - mean top1 tIoU stays at `0.299`, preserving semantic top-rank precision;
+- mean top1 duration stays at `49.0s`, while fixed 120s top-1 results average
+  `96.0s`;
 - Recall@1 and Recall@3 do not improve over semantic-only in this configuration.
+
+The semantic-refined fusion variant promotes a contained semantic event before
+an overlapping fixed 120-second result while keeping the fixed result later in
+the list. On the current 10-query set it matches the plain fused RRF metrics.
+This is useful as a safety check: removing fixed windows outright drops
+Recall@10 on the continuous-control case, but promoting semantic intervals
+without removing fixed fallback preserves coverage.
 
 Transcript reranking helps narrow candidate sets but is not yet useful on the
 fused set:
@@ -98,7 +122,7 @@ three, but the timestamp is imprecise. This is visible in mean best tIoU:
 - fixed 120s: `0.439`.
 
 So fixed 120-second windows are a strong recall fallback, not a better final
-timestamping strategy.
+timestamping strategy for CSAT-style key event retrieval.
 
 ## Case-Level Pattern
 
@@ -121,12 +145,14 @@ Source: `processed/semantic/castle_event_retrieval_cases.csv`
 Keep event-first embedding as the primary path for final timestamp precision,
 and keep fixed 120-second fallback windows as a high-recall auxiliary channel.
 
-Current best system shape:
+Current best CSAT system shape:
 
 1. Search semantic events for precise candidate intervals.
 2. Search fixed 120-second windows as a high-recall safety channel.
 3. Fuse both candidate sets with weighted RRF.
-4. Rerank/refine timestamps inside any fixed-window hit.
+4. Promote semantic intervals before overlapping fixed-window hits, while
+   keeping the fixed hit as fallback context.
+5. Rerank/refine timestamps inside any fixed-window-only hit.
 
 This means the approach is not "semantic events only." The evidence supports
 "semantic events plus fixed-window fallback."

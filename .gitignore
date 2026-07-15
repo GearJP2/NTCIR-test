@@ -26,7 +26,7 @@ data/manifests/
 data/evaluation/
 data/inspection/
 data/castle/
-processed/
+
 
 # Node
 frontend/node_modules/
