@@ -65,6 +65,7 @@ docs/legacy/activitynet/     Retained historical ActivityNet work
 
 ## Work plans
 
+- [Comparison with the CASTLE reference repository and LLFL26 paper](docs/CASTLE_REFERENCE_COMPARISON.md)
 - [Research plan](research_plan.md)
 - [Metadata and semantic chunking work plan](metadata_and_chunking_workplan.md)
 - [Architecture overview](Architecture.md)
